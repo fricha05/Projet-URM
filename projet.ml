@@ -105,6 +105,15 @@ let rec regs_get regList reg_idx =
 			regs_get (List.tl regList) reg_idx
 ;;
 
+
+(* let rec register_cpy regList urmcmd =
+	match urmcmd with
+	|Copy(regidx, regidy) -> 
+	
+	|_-> failwith "failed";; *)
+
+
+
 (* autres fonctions pour les registres à ajouter...
 ajouter les fonctions Copy Jump Succ Zero pour pouvoir les réutiliser dans le run ?
 *)
@@ -113,27 +122,27 @@ ajouter les fonctions Copy Jump Succ Zero pour pouvoir les réutiliser dans le r
  * Returns all registers when the program halts. *)
 (* val urm_run : urm -> reg list = <fun> *)
 
-let urm_run urm =
+(* let urm_run urm =
 	match urm with
 	| (_, Reg list (regs) ) -> regs
-;;
+;; *)
 
 (* me marche pas, idées ?*)
 
-let rec urm_run' urm =
+(* let rec urm_run' urm =
 	match List.hd urm with
 	|InstPtr(_,[]) -> List.tl urm
-	|(*tester chaque commande et utiliser les fonctions de gestion de registre dans chacune d'entre elle ?*)
+	|tester chaque commande et utiliser les fonctions de gestion de registre dans chacune d'entre elle ? *)
 
 (* Runs an URM in trace mode.
  * Returns all registers when the program halts. *)
 (* val urm_run_trace : urm -> regval = <fun> *)
 
-let urm_run_trace =
+(* let urm_run_trace =
 
-(* val urm_mk : urmcmd list -> reg list -> urm = <fun> *)
+val urm_mk : urmcmd list -> reg list -> urm = <fun>
 
-let urm_mk =
+let urm_mk = *)
 
 
 
