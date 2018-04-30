@@ -175,7 +175,7 @@ let change_reg_at_idx regList regid newValue =
 
 let run_cmd regList urm_cmd instptr =
 	match urm_cmd with
-	|Copy(regidx, regidy) -> [instptr_move_down instptr; (copy_from_idy_to_idx regList regidx regidy)]
+	|Copy(regidx, regidy) -> {instptr = (instptr_move_down instptr); regs = (copy_from_idy_to_idx regList regidx regidy)}
 	|Jump(regidx, regidy, line) ->
 		begin match (reg_compar (List.hd (regs_get_list_from_idx regList regidx)) (List.hd (regs_get_list_from_idx regList regidy))) with
 		|0 -> let rec jump_aux instpr_aux acc =
@@ -183,12 +183,68 @@ let run_cmd regList urm_cmd instptr =
 					then jump_aux (instptr_move_up instpr_aux) (acc-1)
 				else if acc < 0
 					then jump_aux (instptr_move_down instpr_aux) (acc +1)
-				else [instpr_aux; regList]
+				else {instptr = instpr_aux; regs = regList}
 			in jump_aux instptr ((get_instptr_line instptr)-line)
 		|_-> failwith "failed"
 		end
-	|Succ(regidx) -> [instptr_move_down instptr; change_reg_at_idx regList regidx 0]
-	|Zero(regidx) -> [instptr_move_down instptr; change_reg_at_idx regList regidx 0]
+	|Succ(regidx) -> {instptr = (instptr_move_down instptr); regs = (succ_reg_from_idx regList regidx)}
+	|Zero(regidx) -> {instptr = (instptr_move_down instptr); regs = (change_reg_at_idx regList regidx 0)}
+;;
+
+let run_cmd' urm =
+	match urm with
+	|{instptr; regs} ->
+		begin match instptr with
+		|InstPtr(_,cmdline) ->
+			begin match List.hd cmdline with
+			|(_,cmd) ->
+				begin match cmd with
+				|Copy(regidx, regidy) -> {instptr = (instptr_move_down instptr); regs = (copy_from_idy_to_idx regs regidx regidy)}
+				|Jump(regidx, regidy, line) ->
+					begin match (reg_compar (List.hd (regs_get_list_from_idx regs regidx)) (List.hd (regs_get_list_from_idx regs regidy))) with
+					|0 -> let rec jump_aux instpr_aux acc =
+							if acc > 0
+								then jump_aux (instptr_move_up instpr_aux) (acc-1)
+							else if acc < 0
+								then jump_aux (instptr_move_down instpr_aux) (acc +1)
+							else {instptr = instpr_aux; regs = regs}
+						in jump_aux instptr ((get_instptr_line instptr)-line)
+					|_-> failwith "failed"
+					end
+				|Succ(regidx) -> {instptr = (instptr_move_down instptr); regs = (succ_reg_from_idx regs regidx)}
+				|Zero(regidx) -> {instptr = (instptr_move_down instptr); regs = (change_reg_at_idx regs regidx 0)}
+				end
+			end
+		end
+;;
+
+
+let instptr_get_cmd inst_ptr =
+	match (instptr_get inst_ptr) with
+	| (_, cmd) -> cmd
+;;
+
+let run_cmd_bis regList instptr =
+	match (instptr_get_cmd instptr) with
+	|Copy(regidx, regidy) -> {instptr = (instptr_move_down instptr); regs = (copy_from_idy_to_idx regList regidx regidy)}
+	|Jump(regidx, regidy, line) ->
+		begin match (reg_compar (List.hd (regs_get_list_from_idx regList regidx)) (List.hd (regs_get_list_from_idx regList regidy))) with
+		|0 -> let rec jump_aux instpr_aux acc =
+				if acc > 0
+					then jump_aux (instptr_move_up instpr_aux) (acc-1)
+				else if acc < 0
+					then jump_aux (instptr_move_down instpr_aux) (acc +1)
+				else {instptr = instpr_aux; regs = regList}
+			in jump_aux instptr ((get_instptr_line instptr)-line)
+		|_-> failwith "failed"
+		end
+	|Succ(regidx) -> {instptr = (instptr_move_down instptr); regs = (succ_reg_from_idx regList regidx)}
+	|Zero(regidx) -> {instptr = (instptr_move_down instptr); regs = (change_reg_at_idx regList regidx 0)}
+;;
+
+let run_cmd_alpha urmrecue =
+	match urmrecue with
+	| {instptr; regs} -> (run_cmd_bis regs instptr)
 ;;
 
 (* Runs an URM.
