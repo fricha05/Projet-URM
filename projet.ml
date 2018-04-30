@@ -1,16 +1,24 @@
 
+
+
+(* Florian RICHARD et Oscar FALMER *)
+
+
+
+
 #use "types.ml";;
-  
+#load "str.cma";;
+
 (* 1.3.1 Pointeur sur instruction *)
 
-(* Create an instruction pointer for an URM program. *) 
-(* val instptr_mk : urmcmd list -> instptr = <fun> *) 
-let instptr_mk cmd_list = 
+(* Create an instruction pointer for an URM program. *)
+(* val instptr_mk : urmcmd list -> instptr = <fun> *)
+let instptr_mk cmd_list =
 	let rec aux cmd_list acc =
 		match (List.tl cmd_list) with
 		| [] -> [acc, (List.hd cmd_list)]
 		| _ -> [acc, (List.hd cmd_list)]@(aux (List.tl cmd_list) (acc+1))
-	in InstPtr([],(aux cmd_list 0))  
+	in InstPtr([],(aux cmd_list 0))
 ;;
 
 let get_instptr_line instptr =
@@ -18,28 +26,26 @@ let get_instptr_line instptr =
 	|InstPtr(_, list2) ->
 		match List.hd list2 with
 		|(line, _) -> line
-		|_ -> failwith "error"
-	|_->failwith "error"
 ;;
 
-(* ( [], [(0, ZERO O), (1, JUMP 1 3 6), ...] ) *) 
+(* ( [], [(0, ZERO O), (1, JUMP 1 3 6), ...] ) *)
 
-(* Move the instruction pointer up. Do nothing if this is not possible. *) 
+(* Move the instruction pointer up. Do nothing if this is not possible. *)
 (* val instptr_move_up : instptr -> instptr = <fun> *)
-let instptr_move_up inst_ptr = 
+let instptr_move_up inst_ptr =
 	match inst_ptr with
-	| InstPtr(list1, list2) -> 
+	| InstPtr(list1, list2) ->
 		if list2 <> []
 			then InstPtr( (list1@(List.tl list2)), (List.tl list2) )
 		else
 			InstPtr(list1, list2)
 ;;
 
-let instptr_move_up inst_ptr = 
+let instptr_move_up inst_ptr =
 	match inst_ptr with
 	| InstPtr(_, []) -> inst_ptr
 	| InstPtr(list1, list2) ->  InstPtr( ((List.tl list1),(List.hd list1)::list2) )
-;;		
+;;
 
 let instptr_move_down instptr =
 	match instptr with
@@ -47,11 +53,11 @@ let instptr_move_down instptr =
 	| InstPtr(list1, list2) -> InstPtr((List.hd list2)::list1, (List.tl list2));;
 
 (* Get the current command from the instruction pointer. *)
-(* Fail if the command pointer is not set on a valid command. *) 
+(* Fail if the command pointer is not set on a valid command. *)
 (* val instptr_get : instptr -> line * urmcmd = <fun> *)
 (* on récupère le premier élément de la dernière liste *)
 
-let instptr_get inst_ptr = 
+let instptr_get inst_ptr =
 	match inst_ptr with
 	| InstPtr(_,[]) -> failwith "Commande non valide"
 	| InstPtr(_, list2) -> (List.hd list2)
@@ -61,7 +67,7 @@ let instptr_get inst_ptr =
  * Returns "null" is the instruction pointer is not valid. *)
 (* val instptr_string : instptr -> string = <fun> *)
 
-let instptr_string inst_ptr = 
+let instptr_string inst_ptr =
 	match (instptr_get inst_ptr) with
 	| (_, Copy(i,j)) -> "Copy " ^ string_of_int i
 	| (_, Jump(i, j, k)) -> "Jump " ^ string_of_int(i) ^ " " ^ string_of_int(j) ^ " " ^ string_of_int(k)
@@ -75,10 +81,10 @@ instptr_string(instptr_move_down (instptr_move_down (instptr_mk add_program)));;
 
 
 (* Returns the index of a register. *)
-(* val reg_idx : reg -> regidx = <fun> *) 
+(* val reg_idx : reg -> regidx = <fun> *)
 
-let reg_idx reg = 
-	match reg with 
+let reg_idx reg =
+	match reg with
 	| Reg(index,_) -> index
 ;;
 
@@ -90,7 +96,7 @@ let reg_idx reg =
 
 let reg_compar reg1 reg2 =
 	match reg1, reg2 with
-	| Reg(_,val1), Reg(_,val2) -> 
+	| Reg(_,val1), Reg(_,val2) ->
 		if val1 < val2
 			then (-1)
 		else if val1 = val2
@@ -103,117 +109,209 @@ let reg_compar reg1 reg2 =
  * there is not register with the sought register index. *)
 (* val get_regval : reg list -> regidx -> regval = <fun> *)
 
-let rec regs_get regList reg_idx =
-	if regList = []
-		then failwith "failed"
+(* Recupere valeur à un indice du registre *)
+
+let rec regs_get_value_from_idx regList reg_idx =
+	if regList = [] (* si liste vite : erreur *)
+		then failwith "failed - regs_get_value_from_idx"
 	else
-	match (List.hd regList) with
-	| Reg(index, value) -> 
-		if index = reg_idx
-			then value
-		else 
-			regs_get (List.tl regList) reg_idx
+		match (List.hd regList) with
+		| Reg(index, value) ->
+			if index = reg_idx (* si on est au bon index, valeur renvoyée *)
+				then value
+			else
+				regs_get_value_from_idx (List.tl regList) reg_idx
 ;;
 
-let rec regs_get_from_id regList reg_id =
-	if regList = []
-		then failwith "failed"
+(* Recupere la liste à partir d'un indice du registre *)
+
+let rec regs_get_list_from_idx regList reg_id =
+	if regList = [] (* si liste vite : erreur *)
+		then failwith "failed - regs_get_list_from_idx"
 	else
-	match (List.hd regList) with
-	|Reg(index, value) -> 
-		if (index = reg_id)
-			then (List.hd regList)
+		match (List.hd regList) with
+		|Reg(index, value) ->
+			if (index = reg_id) (* si on est au bon index, liste à partir de la valeur renvoyée *)
+				then regList (* <-- correction ici *)
+			else
+				regs_get_list_from_idx (List.tl regList) reg_id
+;;
+
+(* Parcours de liste avec une liste de ce qu'on a déjà regardé,
+on modifie ce qu'il y a à reg_idx par ce qu'il y a à reg_idy*)
+
+let copy_from_idy_to_idx regList reg_idx reg_idy =
+	let rec aux l1 l2 lOriginal idx idy =
+		if l1 = []
+			then failwith "failed - copy_from_idy_to_idx"
 		else
-			regs_get_from_id (List.tl regList) reg_id
+			match List.hd l1 with
+			|Reg(index, value)->
+				if(index = idx)
+					then (List.rev l2)@((List.hd (regs_get_list_from_idx lOriginal idy))::(List.tl l1))
+				else
+					aux (List.tl l1) ((List.hd l1)::l2) lOriginal idx idy
+	in aux regList [] regList reg_idx reg_idy
 ;;
 
-let rec copy_from_id regList1 regList2 reg_idx reg_idy =
-	match List.hd regList1 with
-	|Reg(index, value)->
-		if(index = reg_idx)
-			then (List.rev regList2)@((regs_get_from_id regList1 reg_idy)::(List.tl regList1))
+(* Ajoute 1 à la valeur de la liste à l'index indiqué *)
+
+let succ_reg_from_idx regList regidx =
+	let rec aux l1 l2 =
+		if l1 = []
+			then failwith "failed - succ_reg_from_idx"
 		else
-			copy_from_id (List.tl regList1) ((List.hd regList1)::regList2) reg_idx reg_idy
+			match List.hd l1 with
+			|Reg(index, value)->
+				if(index = regidx)
+					then (List.rev l2)@(Reg(index, (value+1))::(List.tl l1))
+				else if (regidx < index)
+					then (List.rev l2)@(Reg(regidx, (value+1))::l1)
+				else if (List.tl l1 == [])
+					then (List.rev l2)@l1@[Reg(regidx, (value+1))]
+				else
+					aux (List.tl l1) ((List.hd l1)::l2)
+	in aux regList []
 ;;
 
-let rec succ_reg_from_id regList1 regList2 regid =
-	match List.hd regList1 with
-	|Reg(index, value)->
-		if(index = regid)
-			then (List.rev regList2)@(Reg(index, (value+1))::(List.tl regList1))
+(* Change la valeur à l'index x *)
+
+let change_reg_at_idx regList regidx newValue =
+	let rec aux l1 l2 =
+		if l1 = []
+			then failwith "failed - change_reg_at_idx"
 		else
-			succ_reg_from_id (List.tl regList1) ((List.hd regList1)::regList2) regid
-;;
-
-let register_cmd regList urmcmd instptr =
-	match urmcmd with
-	|Copy(regidx, regidy) -> ((copy_from_id regList [] regidx regidy), instptr)
-	|Jump(regidx, regidy, line) -> 
-		begin match (reg_compar (regs_get_from_id regList regidx)(regs_get_from_id regList regidy)) with
-		|0 -> let rec jump_aux instpr_aux acc =
-				if acc > 0 
-					then jump_aux (instptr_move_up instpr_aux) (acc-1)
-				else if acc < 0
-					then jump_aux (instptr_move_down instpr_aux) (acc +1)
-				else (regList, instpr_aux)
-			in jump_aux instptr ((get_instptr_line instptr)-line)
-		|_-> failwith "failed"
-		end
-	|Succ(regidx) -> (succ_reg_from_id regList [] regidx, instptr)
-	(*|Zero(regidx) -> *)
-	|_-> failwith "failed"
+			match List.hd l1 with
+			|Reg(index, value)->
+				if(index = regidx)
+					then (List.rev l2)@(Reg(index, newValue)::(List.tl l1))
+				else if (regidx < index)
+					then (List.rev l2)@(Reg(regidx, newValue)::l1)
+				else if (List.tl l1 == [])
+					then (List.rev l2)@l1@[Reg(regidx, newValue)]
+				else
+					aux (List.tl l1) ((List.hd l1)::l2)
+	in aux regList []
 ;;
 
 
-(* autres fonctions pour les registres à ajouter...
-ajouter les fonctions Copy Jump Succ Zero pour pouvoir les réutiliser dans le run ?
-*)
+(* Récupère prochaine commande à partir d'un inst_ptr *)let add_program = [Zero 0; Zero 3; Jump (1, 3, 6); Succ 0; Succ 3;
+Jump (3, 3, 2); Zero 3; Jump (2, 3, 11); Succ 0; Succ 3; Jump (3, 3, 7)];;
+
+let instptr_get_cmd inst_ptr =
+	match (instptr_get inst_ptr) with
+	| (_, cmd) -> cmd
+;;
+
+(* Effectue une commande à un pointeur donné et renvoie le pointeur actuel dans la liste des instructions à faire *)
 
 (* Runs an URM.
  * Returns all registers when the program halts. *)
 (* val urm_run : urm -> reg list = <fun> *)
 
-(* let urm_run urm =
-	match urm with
-	| (_, Reg list (regs) ) -> regs
-;; *)
+let run_cmd_aux regList instptr =
+	match (instptr_get_cmd instptr) with
+	|Copy(regidx, regidy) -> {instptr = (instptr_move_down instptr); regs = (copy_from_idy_to_idx regList regidx regidy)}
+	|Jump(regidx, regidy, line) ->
+		begin match (reg_compar (List.hd (regs_get_list_from_idx regList regidx)) (List.hd (regs_get_list_from_idx regList regidy))) with
+		|0 -> let rec jump_aux instpr_aux acc =
+				if acc > 0
+					then jump_aux (instptr_move_up instpr_aux) (acc-1)
+				else if acc < 0
+					then jump_aux (instptr_move_down instpr_aux) (acc+1)
+				else {instptr = instpr_aux; regs = regList}
+			in jump_aux instptr ((get_instptr_line instptr)-line)
+    |1 -> {instptr = (instptr_move_down instptr); regs = regList}
+		|_-> failwith "failed - run_cmd_aux"
+		end
+	|Succ(regidx) -> {instptr = (instptr_move_down instptr); regs = (succ_reg_from_idx regList regidx)}
+	|Zero(regidx) -> {instptr = (instptr_move_down instptr); regs = (change_reg_at_idx regList regidx 0)}
+;;
 
-(* me marche pas, idées ?*)
+let run_cmd urmrecue =
+	match urmrecue with
+	| {instptr; regs} -> (run_cmd_aux regs instptr)
+;;
 
-(* let rec urm_run' urm =
-	match List.hd urm with
-	|InstPtr(_,[]) -> List.tl urm
-	|tester chaque commande et utiliser les fonctions de gestion de registre dans chacune d'entre elle ? *)
+(* Récupère la liste des registres à partir d'un urm. *)
+
+let get_reglist_from_urm urmrecue =
+	match urmrecue with
+	| {instptr; regs} -> regs
+;;
+
+(* Récupère instptr à partir d'un urm. *)
+
+let get_instptr_from_urm urmrecue =
+	match urmrecue with
+	| {instptr; regs} -> instptr
+;;
+
+(* urm_run *)
+
+let rec urm_run urm =
+  match get_instptr_from_urm urm with
+    |InstPtr(_,[])-> (get_reglist_from_urm urm)
+    |_ -> urm_run (run_cmd urm)
+;;
+
+let run_cmd_aux_bis regList instptr =
+	match (instptr_get_cmd instptr) with
+	|Copy(regidx, regidy) -> (Printf.printf "%d: Copy %d %d \n\n" (get_instptr_line instptr) regidx regidy; {instptr = (instptr_move_down instptr); regs = (copy_from_idy_to_idx regList regidx regidy)})
+	|Jump(regidx, regidy, line) ->
+		begin match (reg_compar (List.hd (regs_get_list_from_idx regList regidx)) (List.hd (regs_get_list_from_idx regList regidy))) with
+		|0 -> let rec jump_aux instpr_aux acc =
+				if acc > 0
+					then jump_aux (instptr_move_up instpr_aux) (acc-1)
+				else if acc < 0
+					then jump_aux (instptr_move_down instpr_aux) (acc+1)
+				else (Printf.printf "%d: Jump %d %d %d \n\n" (get_instptr_line instptr) regidx regidy line; {instptr = instpr_aux; regs = regList})
+			in jump_aux instptr ((get_instptr_line instptr)-line)
+    |1 -> Printf.printf "%d: Jump %d %d %d \n\n" (get_instptr_line instptr) regidx regidy line; {instptr = (instptr_move_down instptr); regs = regList}
+		|_-> failwith "failed - run_cmd_aux_bis"
+		end
+	|Succ(regidx) -> (Printf.printf "%d: Succ %d \n\n" (get_instptr_line instptr) regidx;{instptr = (instptr_move_down instptr); regs = (succ_reg_from_idx regList regidx)})
+	|Zero(regidx) -> (Printf.printf "%d: Zero %d \n\n" (get_instptr_line instptr) regidx;{instptr = (instptr_move_down instptr); regs = (change_reg_at_idx regList regidx 0)})
+;;
+
+let run_cmd_bis urmrecue =
+	match urmrecue with
+	| {instptr; regs} -> (run_cmd_aux_bis regs instptr)
+;;
 
 (* Runs an URM in trace mode.
  * Returns all registers when the program halts. *)
 (* val urm_run_trace : urm -> regval = <fun> *)
 
-(* let urm_run_trace =
-
-val urm_mk : urmcmd list -> reg list -> urm = <fun>
-
-let urm_mk = *)
-
-
-
-
+let urm_run_trace urm =
+    let rec aux urm =
+        match get_instptr_from_urm urm with
+    	    |InstPtr(_,[])-> (get_reglist_from_urm urm)
+    	    |_ -> aux (run_cmd_bis urm)
+   	in aux urm
+;;
 
 
+(* createLineUrmcmdList - Créer la liste de tuples avec une commande et le numéro d'index correspondant *)
+
+let createLineUrmcmdList urmcmdlist =
+	let rec aux list acc =
+		match list with
+		| [] -> []
+		| _ -> [(acc, (List.hd list))] @ aux (List.tl list) (acc+1)
+	in aux urmcmdlist 0
+;;
+
+(*val urm_mk : urmcmd list -> reg list -> urm = <fun>*)
+
+let urm_mk urmcmdlist reglist = {instptr = InstPtr([], (createLineUrmcmdList urmcmdlist) ); regs = reglist};;
 
 
+(** Tests **)
 
 
+let m = urm_mk add_program [Reg (1, 2); Reg (2, 3)];;
 
+urm_run m;;
 
-
-
-
-
-
-
-
-
-
-
-
+urm_run_trace m;;

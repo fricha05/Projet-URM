@@ -199,7 +199,7 @@ let run_cmd regList urm_cmd instptr =
   let rec aux urm =
     match List.hd urm with
     |InstPtr(_,[])-> List.tl urm
-    |_ -> aux ()
+    |_ -> aux (run_cmd)
 ;; *)
 
 (* me marche pas, idées ?*)
