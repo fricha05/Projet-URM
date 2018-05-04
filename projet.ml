@@ -8,6 +8,8 @@
 
 
 #use "types.ml";;
+#use "projet-oscar.ml";;
+#use "projet-florian.ml";;
 #load "str.cma";;
 
 (* 1.3.1 Pointeur sur instruction *)
