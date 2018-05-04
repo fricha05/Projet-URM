@@ -1,8 +1,8 @@
 let rec compile_comment_out is =
-  match is with
-  |[] -> []
-  |Comment s::is' -> compile_comment_out is'
-  |i::is' -> i::compile_comment_out is'
+    match is with
+    |[] -> []
+    |Comment s::is' -> compile_comment_out is'
+    |i::is' -> i::compile_comment_out is'
 ;;
 
 let compile_comment_out' is =
