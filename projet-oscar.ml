@@ -1,5 +1,5 @@
 
-// 1
+
 
 let rec compile_label_out is =
 	let rec aux is acc =
@@ -10,7 +10,7 @@ let rec compile_label_out is =
 	in aux is 1;
 ;;
 
-// Etape 1
+(* Etape 1 *)
 
 let rec dec_out is =
     match is with
@@ -57,7 +57,7 @@ let rec ltpredicate_out is =
 
 let compile_stage1 is = ltpredicate_out (leqpredicate_out (geqpredicate_out (zero_predicate_out (mult_out (dec_out is)))));;
 
-// Etape 2
+(* Etape 2 *)
 
 let rec add_out is = 
 	match is with
@@ -77,15 +77,27 @@ let rec sub_out is =
 let rec gtpredicate_out is = 
 	match is with
 	|[] -> []
-	|GTqPredicate(ri1, ri2, label)::is' -> Add(0,(ri1-ri2)::gtpredicate_out is'
+	|GTqPredicate(ri1, ri2, label)::is' -> ??????::gtpredicate_out is' ???????
 	|i::is' -> i::gtpredicate_out is'
 ;;
 
 let compile_stage2 is = gtpredicate_out( sub_out( add_out(is) ) );;
 
-// Etape 3
+(* Etape 3 *)
 
-// Etape 4
+let rec goto_out is = is ;;
+
+let compile_stage3 is = goto_out is;;
+
+(* Etape 4 *)
+
+let rec inc_out is = is ;;
+
+let rec eqpredicate is = is ;;
+
+let rec sub is = is ;;
+
+let compile_stage4 is = inc_out (eqpredicate (sub is) );;
 
 
 
