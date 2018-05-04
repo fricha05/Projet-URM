@@ -143,7 +143,7 @@ let rec regs_get_list_from_idx regList reg_id =
 (* Parcours de liste avec une liste de ce qu'on a déjà regardé,
 on modifie ce qu'il y a à reg_idx par ce qu'il y a à reg_idy*)
 
-let URMCopy_from_idy_to_idx regList reg_idx reg_idy =
+let copy_from_idy_to_idx regList reg_idx reg_idy =
 	let rec aux l1 l2 lOriginal idx idy =
 		if l1 = []
 			then failwith "failed - URMCopy_from_idy_to_idx"
@@ -159,7 +159,7 @@ let URMCopy_from_idy_to_idx regList reg_idx reg_idy =
 
 (* Ajoute 1 à la valeur de la liste à l'index indiqué *)
 
-let URMSucc_reg_from_idx regList regidx =
+let succ_reg_from_idx regList regidx =
 	let rec aux l1 l2 =
 		if l1 = []
 			then failwith "failed - URMSucc_reg_from_idx"
@@ -225,20 +225,20 @@ let instptr_get_cmd inst_ptr =
 
 let run_cmd_aux regList instptr =
 	match (instptr_get_cmd instptr) with
-	|URMCopy(regidx, regidy) -> {instptr = (instptr_move_down instptr); regs = (URMCopy_from_idy_to_idx regList regidx regidy)}
+	|URMCopy(regidx, regidy) -> {instptr = (instptr_move_down instptr); regs = (copy_from_idy_to_idx regList regidx regidy)}
 	|URMJump(regidx, regidy, line) ->
 		begin match (reg_compar (List.hd (regs_get_list_from_idx regList regidx)) (List.hd (regs_get_list_from_idx regList regidy))) with
-		|0 -> let rec URMJump_aux instpr_aux acc =
+		|0 -> let rec jump_aux instpr_aux acc =
 				if acc > 0
-					then URMJump_aux (instptr_move_up instpr_aux) (acc-1)
+					then jump_aux (instptr_move_up instpr_aux) (acc-1)
 				else if acc < 0
-					then URMJump_aux (instptr_move_down instpr_aux) (acc+1)
+					then jump_aux (instptr_move_down instpr_aux) (acc+1)
 				else {instptr = instpr_aux; regs = regList}
-			in URMJump_aux instptr ((get_instptr_line instptr)-line)
+			in jump_aux instptr ((get_instptr_line instptr)-line)
     |1 -> {instptr = (instptr_move_down instptr); regs = regList}
 		|_-> failwith "failed - run_cmd_aux"
 		end
-	|URMSucc(regidx) -> {instptr = (instptr_move_down instptr); regs = (URMSucc_reg_from_idx regList regidx)}
+	|URMSucc(regidx) -> {instptr = (instptr_move_down instptr); regs = (succ_reg_from_idx regList regidx)}
 	|URMZero(regidx) -> {instptr = (instptr_move_down instptr); regs = (change_reg_at_idx regList regidx 0)}
 ;;
 
@@ -276,20 +276,20 @@ let rec urm_run urm =
 
 let run_cmd_aux_bis regList instptr =
 	match (instptr_get_cmd instptr) with
-	|URMCopy(regidx, regidy) -> (Printf.printf "%d: URMCopy %d %d\n%s \n\n" (get_instptr_line instptr) regidx regidy (regs_get_string regList); {instptr = (instptr_move_down instptr); regs = (URMCopy_from_idy_to_idx regList regidx regidy)})
+	|URMCopy(regidx, regidy) -> (Printf.printf "%d: URMCopy %d %d\n%s \n\n" (get_instptr_line instptr) regidx regidy (regs_get_string regList); {instptr = (instptr_move_down instptr); regs = (copy_from_idy_to_idx regList regidx regidy)})
 	|URMJump(regidx, regidy, line) ->
 		begin match (reg_compar (List.hd (regs_get_list_from_idx regList regidx)) (List.hd (regs_get_list_from_idx regList regidy))) with
-		|0 -> let rec URMJump_aux instpr_aux acc =
+		|0 -> let rec jump_aux instpr_aux acc =
 				if acc > 0
-					then URMJump_aux (instptr_move_up instpr_aux) (acc-1)
+					then jump_aux (instptr_move_up instpr_aux) (acc-1)
 				else if acc < 0
-					then URMJump_aux (instptr_move_down instpr_aux) (acc+1)
+					then jump_aux (instptr_move_down instpr_aux) (acc+1)
 				else (Printf.printf "%d: URMJump %d %d %d\n%s \n\n" (get_instptr_line instptr) regidx regidy line (regs_get_string regList); {instptr = instpr_aux; regs = regList})
-			in URMJump_aux instptr ((get_instptr_line instptr)-line)
+			in jump_aux instptr ((get_instptr_line instptr)-line)
     	|1 -> Printf.printf "%d: URMJump %d %d %d\n%s \n\n" (get_instptr_line instptr) regidx regidy line (regs_get_string regList); {instptr = (instptr_move_down instptr); regs = regList}
 		|_-> failwith "failed - run_cmd_aux_bis"
 		end
-	|URMSucc(regidx) -> (Printf.printf "%d: URMSucc %d\n%s \n\n" (get_instptr_line instptr) regidx (regs_get_string regList);{instptr = (instptr_move_down instptr); regs = (URMSucc_reg_from_idx regList regidx)})
+	|URMSucc(regidx) -> (Printf.printf "%d: URMSucc %d\n%s \n\n" (get_instptr_line instptr) regidx (regs_get_string regList);{instptr = (instptr_move_down instptr); regs = (succ_reg_from_idx regList regidx)})
 	|URMZero(regidx) -> (Printf.printf "%d: URMZero %d\n%s \n\n" (get_instptr_line instptr) regidx (regs_get_string regList);{instptr = (instptr_move_down instptr); regs = (change_reg_at_idx regList regidx 0)})
 ;;
 

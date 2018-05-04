@@ -30,6 +30,7 @@ let add_program = [URMZero 0; URMZero 3; URMJump (1, 3, 6); URMSucc 0; URMSucc 3
 
 (* label *)
 type label = string
+
 (* EURM instruction *)
 type eurmcmd =
 	|Add of regidx * regidx
