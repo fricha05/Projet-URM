@@ -10,15 +10,15 @@ let rec string_of_file f =
 let rec program_of_lex lex =
 	match lex with
 		|[] -> []
-		|"zero" :: arg_1 :: tail ->
-			(Zero (int_of_string arg_1)) :: (program_of_lex tail)
-		|"succ" :: arg_1 :: tail ->
-			(Succ (int_of_string arg_1)) :: (program_of_lex tail)
-		|"copy" :: arg_1 :: arg_2 :: tail ->
-			(Copy ((int_of_string arg_1), (int_of_string arg_2)))
+		|"URMZero" :: arg_1 :: tail ->
+			(URMZero (int_of_string arg_1)) :: (program_of_lex tail)
+		|"URMSucc" :: arg_1 :: tail ->
+			(URMSucc (int_of_string arg_1)) :: (program_of_lex tail)
+		|"URMCopy" :: arg_1 :: arg_2 :: tail ->
+			(URMCopy ((int_of_string arg_1), (int_of_string arg_2)))
                 :: (program_of_lex tail)
-        |"jump" :: arg_1 :: arg_2 :: arg_3 :: tail ->
-			(Jump ((int_of_string arg_1), (int_of_string arg_2), (int_of_string arg_3))) :: (program_of_lex tail)
+        |"URMJump" :: arg_1 :: arg_2 :: arg_3 :: tail ->
+			(URMJump ((int_of_string arg_1), (int_of_string arg_2), (int_of_string arg_3))) :: (program_of_lex tail)
 		|_ -> raise Syntax_error
 
 let program_of_string str =
