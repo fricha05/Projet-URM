@@ -1,3 +1,5 @@
+#use "types.ml"
+
 let rec compile_comment_out is =
     match is with
     |[] -> []
@@ -12,8 +14,19 @@ let compile_comment_out' is =
         |_ -> true
         in List.filter is_not_comment is
 ;;
-(* 
+
+let rec compile_label_out is =
+	let rec aux is acc =
+		match is with (* is: instructions *)
+		|[] -> []
+		|Label s::is' -> Label("Label " ^ string_of_int acc) :: (aux is' (acc+1))
+		|i::is' -> i::(aux is' acc)
+	in aux is 1;
+;;
+
+let compile_preprocess is = compile_label_out(compile_comment_out' is);;
+
 let rec compile_regs_out is =
-    match List.hd is with
+    match is with
     |[] -> []
-    | *)
+    |Add(idx, idy) ->
