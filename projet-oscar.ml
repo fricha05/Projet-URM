@@ -14,9 +14,9 @@ let getStateRegister state =
 	| State(label, reg) -> reg
 ;;
 
-let setNewStateRegister state newReg =
+let setNewStateRegister state =
 	match state with
-	| State(label, reg) -> State(label, newReg)
+	| State(label, reg) -> State(label, (reg+1))
 ;;
 
 let setNewStateLabel state =
@@ -131,27 +131,64 @@ let add_out (is, state) =
 	in (aux is, setNewStateLabel state)
 ;;
 
-let sub_out is = 
+let sub_out (is, state) = 
+	let rec aux is = 
+		match is with
+			|[] -> []
+			|Sub(ri1,ri2)::is' -> 
+
+				(* A : valeur tampon égale à r2 *)
+				Label(getStateLabel state)::
+				Zero(getStateRegister state)::
+				GTPredicate(getStateRegister state, ri2, getStateLabel state)::
+
+				(* B : valeur tampon égale à r1 *)
+				Label(getStateLabel (setNewStateLabel state))::
+				Zero(getStateRegister (setNewStateRegister state))::
+				GTPredicate(getStateRegister (setNewStateRegister state), ri2, getStateLabel (setNewStateLabel state))::
+
+				Zero(ri1)::
+
+				Label(getStateLabel (setNewStateLabel (setNewStateLabel state)))::
+				Inc(ri1)::
+				Inc(getStateRegister state):: (* Incrémente A *)
+				GTPredicate(getStateRegister (setNewStateRegister state), getStateRegister state, getStateLabel (setNewStateLabel (setNewStateLabel state))):: (* On compare A et B *)
+
+				aux is'
+			|i::is' -> i::aux is'
+	in (aux is, setNewStateLabel (setNewStateLabel (setNewStateLabel state)))
+;;
+
+let rec gtpredicate_out (is, state) = 
 	let rec aux is = 
 		match is with
 		|[] -> []
-		|Sub(ri1,ri2)::is' -> Add(0,(ri1-ri2)::sub_out is'
-		|i::is' -> i::sub_out is'
-	in (aux is, setNewStateLabel state)
+		|GTPredicate(ri1, ri2, label)::is' -> 
+
+			EqPredicate(ri1, ri2, getStateLabel (setNewStateLabel state))::
+
+			(* A : valeur tampon *)
+			Zero(getStateRegister state)::
+
+			Label(getStateLabel state)::
+			Inc(getStateRegister state)::
+			
+			EqPredicate(getStateRegister state, ri2, label)::
+			EqPredicate(getStateRegister state, ri1, getStateLabel (setNewStateLabel state))::
+
+			Goto(getStateLabel state)::
+
+			Label(getStateLabel (setNewStateLabel state))::
+			aux is'
+		|i::is' -> i::aux is'
+	in (aux is, state)
 ;;
 
-(* à enlever
-
-let rec gtpredicate_out is = 
-	match is with
-	|[] -> []
-	|GTqPredicate(ri1, ri2, label)::is' -> ??????::gtpredicate_out is' ???????
-	|i::is' -> i::gtpredicate_out is'
-;;
-
-let compile_stage2 is = gtpredicate_out( sub_out( add_out(is) ) );;
+let compile_stage2 (is, state) = gtpredicate_out( sub_out( add_out((is,state)) ) );;
 
 (* Etape 3 *)
+
+(* à enlever
 
 let rec goto_out is = is ;;
 
