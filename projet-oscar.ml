@@ -196,6 +196,8 @@ let rec code_a_partir_du_label is label =
 	|i::is' -> code_a_partir_du_label is' label
 ;;
 
+(** à vérifier, Goto me parait pas correct **)
+
 let goto_out (is, state) = 
 	let rec aux is =
 		match is with
@@ -209,14 +211,34 @@ let compile_stage3 (is, state) = goto_out (is, state);;
 
 (* Etape 4 *)
 
+let label_to_line is label =
+	let rec aux is acc =
+		match is with
+		|[] -> 0
+		|Label l::is' -> if (l = label) then acc (* à tester *)
+						else aux is' (acc) (* ne compte pas les labels *)
+		|i::is' -> aux is' (acc+1)
+	in aux is 1
+;;
+
+let compile_stage4 (is, state) = 
+	let rec aux is =
+		match is with
+		|[] -> []
+		|Inc r1::is' -> URMSucc(r1)::aux is'
+		|Zero r1::is' -> URMZero(r1)::aux is'
+		|EqPredicate(r1,r2,label)::is' -> URMJump(r1, r2, (label_to_line is label))::aux is'
+		|Label l::is' -> aux is'
+		|Copy(r1,r2)::is' -> URMCopy(r1,r2)::aux is'
+		|_::is' -> aux is'
+		(*|i::is' -> i::aux is'*)
+	in (aux is, state) (* state à modifier ?? *)
+;;
+
 (* à enlever
 
-let rec inc_out is = is ;;
-
 let rec eqpredicate is = is ;;
-
 let rec sub is = is ;;
-
 let compile_stage4 is = inc_out (eqpredicate (sub is) );;
 
 

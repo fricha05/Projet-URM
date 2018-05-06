@@ -322,7 +322,7 @@ let createLineUrmcmdList urmcmdlist =
 let urm_mk urmcmdlist reglist = {instptr = InstPtr([], (createLineUrmcmdList urmcmdlist) ); regs = reglist};;
 
 
-(** Tests **)
+(** Tests Rendu 1 **)
 
 (*let m = urm_mk add_program [Reg (1, 2); Reg (2, 3)];;
 
@@ -330,7 +330,9 @@ urm_run m;;
 
 urm_run_trace m;;*)
 
-(*let eurm_factorial = [Comment "Compute r1! and place the result in r1"; ZeroPredicate (1, "r1=0");
+(* Tests Rendu 2
+
+let eurm_factorial = [Comment "Compute r1! and place the result in r1"; ZeroPredicate (1, "r1=0");
 Goto "r1>0"; Comment "r1 holds 0"; Label "r1=0"; Inc 1; Goto "done"; Comment "r1 holds a positive integer"; 
 Label "r1>0"; Copy (2, 1); Zero 1; Inc 1; Zero 3; Inc 3; Comment "main loop"; Label "loop"; Mult (1, 3); 
 EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]
