@@ -324,11 +324,11 @@ let urm_mk urmcmdlist reglist = {instptr = InstPtr([], (createLineUrmcmdList urm
 
 (** Tests **)
 
-let m = urm_mk add_program [Reg (1, 2); Reg (2, 3)];;
+(*let m = urm_mk add_program [Reg (1, 2); Reg (2, 3)];;
 
 urm_run m;;
 
-urm_run_trace m;;
+urm_run_trace m;;*)
 
 (*
   gestion des labels :

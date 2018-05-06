@@ -54,7 +54,7 @@ type eurmcmd =
 	|Zero of regidx
 	|ZeroPredicate of regidx * label
 
-type eurmcmd_and_state = ES of eurmcmd list * state;;
+(* test type eurmcmd_and_state = ES of eurmcmd list * state;; *)
 
 
 

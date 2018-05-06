@@ -14,12 +14,12 @@ let getStateRegister state =
 	| State(label, reg) -> reg
 ;;
 
-let setStateRegister state newReg =
+let setNewStateRegister state newReg =
 	match state with
 	| State(label, reg) -> State(label, newReg)
 ;;
 
-let setStateLabel state =
+let setNewStateLabel state =
 	match state with
 	| State(label, reg) -> State(string_of_int ((int_of_string label) + 1), reg)
 ;;
@@ -37,87 +37,110 @@ let rec compile_label_out is =
 
 (* Etape 1 *)
 
-let rec dec_out (is,state)  =
+let dec_out (is, state)  =
 	let rec aux is =
 	    match is with
 	    |[] -> []
-	    |Dec(ri)::is' -> Sub(ri,1)::aux is' (*ri : registre index*)
+	    |Dec(ri)::is' -> 
+		    Zero(getStateRegister state)::
+		    Inc(getStateRegister state)::
+		    Sub(ri,getStateRegister state)::aux is' (*ri : registre index*)
 	    |i::is' -> i::aux is'
-	in (aux, state)
-;;
-
-(* 
-let rec mult_out is =
-    match is with
-    |[] -> []
-    |Mult(ri1,ri2)::is' -> if r1 <> 1 then Add(ri1,ri1)::mult_out (Mult(ri1, (ri2-1))::is')
-    						else mult_out is'
-    |i::is' -> i::mult_out is'
-;;
-
-compteur à 0 incrémenté en même temps jusque la 2ème valeur
-*)
-
-let rec mult_out (is, state) =
-	let rec aux is = 
-	    match is with
-	    |[] -> []
-	    |Mult(ri1,ri2)::is' -> if r1 <> 1 then Add(ri1,ri1)::mult_out (Mult(ri1, (ri2-1))::is')
-	    						else mult_out is'
-	    |i::is' -> i::mult_out is'
 	in (aux is, state)
 ;;
 
-
-(* à enlever
-
-
-let rec zero_predicate_out is = 
-	match is with
-	|[] -> []
-	|ZeroPredicate(ri,label)::is' -> EqPredicate(ri, 0, label)::zero_predicate_out is'
-	|i::is' -> i::zero_predicate_out is'
+let mult_out (is, state) =
+	let rec aux is = 
+	    match is with
+	    |[] -> []
+	    |Mult(ri1,ri2)::is' -> 
+			Label(getStateLabel state)::
+			Zero(getStateRegister state)::
+			Add(ri1, ri1)::
+			Inc(getStateRegister state)::
+			LTPredicate(getStateRegister state, ri2,  getStateLabel state):: (* si valeurs différentes, boucler *)
+			aux is'
+	    |i::is' -> i::aux is'
+	in (aux is, setNewStateLabel state)
 ;;
 
-let rec geqpredicate_out is = 
-	match is with
-	|[] -> []
-	|GEqPredicate(ri1,ri2,label)::is' -> EqPredicate(ri1, ri2, label)::GTPredicate(ri1, ri2, label)::geqpredicate_out is'
-	|i::is' -> i::geqpredicate_out is'
+let zero_predicate_out (is, state) = 
+	let rec aux is = 
+		match is with
+		|[] -> []
+		|ZeroPredicate(ri,label)::is' -> 
+			Zero(getStateRegister state)::
+			EqPredicate(ri, getStateRegister state, label)::
+			aux is'
+		|i::is' -> i::aux is'
+	in (aux is, state)
 ;;
 
-let rec leqpredicate_out is = 
-	match is with
-	|[] -> []
-	|LEqPredicate(ri1,ri2,label)::is' -> EqPredicate(ri1, ri2, label)::GTPredicate(ri2, ri1, label)::leqpredicate_out is'
-	|i::is' -> i::leqpredicate_out is'
+let geqpredicate_out (is, state) = 
+	let rec aux is = 
+		match is with
+			|[] -> []
+			|GEqPredicate(ri1,ri2,label)::is' -> 
+				EqPredicate(ri1, ri2, label)::
+				GTPredicate(ri1, ri2, label)::
+				aux is'
+			|i::is' -> i::aux is'
+	in (aux is, state)
 ;;
 
-let rec ltpredicate_out is = 
-	match is with
-	|[] -> []
-	|LTqPredicate(ri1,ri2,label)::is' -> GTPredicate(ri2, ri1, label)::ltpredicate_out is'
-	|i::is' -> i::ltpredicate_out is'
+let leqpredicate_out (is, state) = 
+	let rec aux is = 
+		match is with
+		|[] -> []
+		|LEqPredicate(ri1,ri2,label)::is' -> 
+			EqPredicate(ri1, ri2, label)::
+			GTPredicate(ri2, ri1, label)::
+			aux is'
+		|i::is' -> i::aux is'
+	in (aux is, state)
 ;;
 
-let compile_stage1 is = ltpredicate_out (leqpredicate_out (geqpredicate_out (zero_predicate_out (mult_out (dec_out is)))));;
+let ltpredicate_out (is, state) = 
+	let rec aux is = 
+		match is with
+			|[] -> []
+			|LTPredicate(ri1,ri2,label)::is' -> 
+				GTPredicate(ri2, ri1, label)::
+				aux is'
+			|i::is' -> i::aux is'
+	in (aux is, state)
+;;
+
+let compile_stage1 (is, state) = ltpredicate_out (leqpredicate_out (geqpredicate_out (zero_predicate_out (mult_out (dec_out (is,state))))));;
+
 
 (* Etape 2 *)
 
-let rec add_out is = 
-	match is with
-	|[] -> []
-	|Add(ri1,ri2)::is' -> if r2 <> 0 then Inc(ri1)::add_out (Add(ri1, (ri2-1))::is')
-    						else add_out is'
-	|i::is' -> i::ltpredicate_out is'
+let add_out (is, state) = 
+	let rec aux is = 
+	    match is with
+	    |[] -> []
+	    |Add(ri1,ri2)::is' -> 
+			Label(getStateLabel state)::
+			Zero(getStateRegister state)::
+			Inc(ri1)::
+			Inc(getStateRegister state)::
+			GTPredicate(ri2, getStateRegister state, getStateLabel state)::
+			aux is'
+	    |i::is' -> i::aux is'
+	in (aux is, setNewStateLabel state)
 ;;
 
-let rec sub_out is = 
-	match is with
-	|[] -> []
-	|Sub(ri1,ri2)::is' -> Add(0,(ri1-ri2)::sub_out is'
-	|i::is' -> i::sub_out is'
+let sub_out is = 
+	let rec aux is = 
+		match is with
+		|[] -> []
+		|Sub(ri1,ri2)::is' -> Add(0,(ri1-ri2)::sub_out is'
+		|i::is' -> i::sub_out is'
+	in (aux is, setNewStateLabel state)
 ;;
+
+(* à enlever
 
 let rec gtpredicate_out is = 
 	match is with
