@@ -159,7 +159,7 @@ let sub_out (is, state) =
 	in (aux is, setNewStateLabel (setNewStateLabel (setNewStateLabel state)))
 ;;
 
-let rec gtpredicate_out (is, state) = 
+let gtpredicate_out (is, state) = 
 	let rec aux is = 
 		match is with
 		|[] -> []
@@ -181,20 +181,35 @@ let rec gtpredicate_out (is, state) =
 			Label(getStateLabel (setNewStateLabel state))::
 			aux is'
 		|i::is' -> i::aux is'
-	in (aux is, state)
+	in (aux is, setNewStateLabel (setNewStateLabel state))
 ;;
 
 let compile_stage2 (is, state) = gtpredicate_out( sub_out( add_out((is,state)) ) );;
 
 (* Etape 3 *)
 
-(* à enlever
+let rec code_a_partir_du_label is label =
+	match is with
+	|[] -> []
+	|Label l::is' -> if (l = label) then is'
+					else code_a_partir_du_label is' label
+	|i::is' -> code_a_partir_du_label is' label
+;;
 
-let rec goto_out is = is ;;
+let goto_out (is, state) = 
+	let rec aux is =
+		match is with
+		|[] -> []
+		|Goto(label)::is' -> aux (code_a_partir_du_label is' label)
+		|i::is' -> i::aux is'
+	in (aux is, setNewStateLabel (setNewStateLabel state))
+;;
 
-let compile_stage3 is = goto_out is;;
+let compile_stage3 (is, state) = goto_out (is, state);;
 
 (* Etape 4 *)
+
+(* à enlever
 
 let rec inc_out is = is ;;
 
