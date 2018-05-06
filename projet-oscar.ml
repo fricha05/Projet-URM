@@ -1,6 +1,31 @@
 
 
 
+(* let state = (Label, Registre);; *)
+(* prochain label utilisable et prochain registre utilisable *)
+
+let getStateLabel state =
+	match state with
+	| State(label, reg) -> label
+;;
+
+let getStateRegister state =
+	match state with
+	| State(label, reg) -> reg
+;;
+
+let setStateRegister state newReg =
+	match state with
+	| State(label, reg) -> State(label, newReg)
+;;
+
+let setStateLabel state =
+	match state with
+	| State(label, reg) -> State(string_of_int ((int_of_string label) + 1), reg)
+;;
+
+
+(*déjà écrit dans projet-florian 
 let rec compile_label_out is =
 	let rec aux is acc =
 		match is with (* is: instructions *)
@@ -8,17 +33,20 @@ let rec compile_label_out is =
 		|Label s::is' -> ("Label " ^ acc) :: (aux is' (acc+1))
 		|i::is' -> i::(aux is' acc)
 	in aux is 1;
-;;
+;;*)
 
 (* Etape 1 *)
 
-let rec dec_out is =
-    match is with
-    |[] -> []
-    |Dec(ri)::is' -> Sub(ri,1)::dec_out is' (*ri : registre index*)
-    |i::is' -> i::dec_out is'
+let rec dec_out (is,state)  =
+	let rec aux is =
+	    match is with
+	    |[] -> []
+	    |Dec(ri)::is' -> Sub(ri,1)::aux is' (*ri : registre index*)
+	    |i::is' -> i::aux is'
+	in (aux, state)
 ;;
 
+(* 
 let rec mult_out is =
     match is with
     |[] -> []
@@ -26,6 +54,23 @@ let rec mult_out is =
     						else mult_out is'
     |i::is' -> i::mult_out is'
 ;;
+
+compteur à 0 incrémenté en même temps jusque la 2ème valeur
+*)
+
+let rec mult_out (is, state) =
+	let rec aux is = 
+	    match is with
+	    |[] -> []
+	    |Mult(ri1,ri2)::is' -> if r1 <> 1 then Add(ri1,ri1)::mult_out (Mult(ri1, (ri2-1))::is')
+	    						else mult_out is'
+	    |i::is' -> i::mult_out is'
+	in (aux is, state)
+;;
+
+
+(* à enlever
+
 
 let rec zero_predicate_out is = 
 	match is with
@@ -116,3 +161,4 @@ let compile_stage4 is = inc_out (eqpredicate (sub is) );;
 
 
 
+*)

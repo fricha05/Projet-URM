@@ -31,6 +31,9 @@ let add_program = [URMZero 0; URMZero 3; URMJump (1, 3, 6); URMSucc 0; URMSucc 3
 (* label *)
 type label = string
 
+(* état courant : state avec label+1 et reg+1 *)
+type state = State of label * regidx;;
+
 (* EURM instruction *)
 type eurmcmd =
 	|Add of regidx * regidx
@@ -50,3 +53,8 @@ type eurmcmd =
 	|Sub of regidx * regidx
 	|Zero of regidx
 	|ZeroPredicate of regidx * label
+
+type eurmcmd_and_state = ES of eurmcmd list * state;;
+
+
+
