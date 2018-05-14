@@ -266,13 +266,13 @@ let compile_stage2 (is, state) = gtpredicate_out( sub_out( add_out((is,state)) )
 
 (* Etape 3 *)
 
-let rec code_a_partir_du_label is label =
+(*let rec code_a_partir_du_label is label =
 	match is with
 	|[] -> []
 	|Label l::is' -> if (l = label) then is'
 					else code_a_partir_du_label is' label
 	|i::is' -> code_a_partir_du_label is' label
-;;
+;;*)
 
 let goto_out (is, state) = 
 	let rec aux is =
@@ -290,28 +290,39 @@ let compile_stage3 (is, state) = goto_out (is, state);;
 
 (* Etape 4 *)
 
-let label_to_line is label =
+(*let label_to_line is label =
 	let rec aux is acc =
 		match is with
 		|[] -> 0
-		|Label l::is' -> if (l = label) then acc (* à tester *)
+		|Label l::is' -> if (l = label) then acc  (* à tester *)
 						else aux is' (acc) (* ne compte pas les labels *)
 		|i::is' -> aux is' (acc+1)
-	in aux is 1
-;;
+	in aux is 0
+;;*)
 
-let compile_stage4 (is, state) = 
-	let rec aux is =
+let rec label_to_line label listeLabels = 
+	if fst (List.hd listeLabels) = label
+		then snd (List.hd listeLabels)
+	else
+		label_to_line label (List.tl listeLabels)
+
+(* premiere ligne : index 0 *)
+let compile_stage4 (is, state) =
+	let rec suppression_liste is isFinal listeLabels acc =
+		match is with
+		|[] -> aux isFinal listeLabels
+		|Label l::is' -> suppression_liste is' isFinal ((l, acc)::listeLabels) acc
+		|q::is' -> suppression_liste is' (isFinal@[q]) listeLabels (acc+1)
+	and aux is listeLabels =
 		match is with
 		|[] -> []
-		|Inc r1::is' -> URMSucc(r1)::aux is'
-		|Zero r1::is' -> URMZero(r1)::aux is'
-		|EqPredicate(r1,r2,label)::is' -> URMJump(r1, r2, (label_to_line is label))::aux is'
-		|Label l::is' -> aux is'
-		|Copy(r1,r2)::is' -> URMCopy(r1,r2)::aux is'
-		|_::is' -> aux is'
+		|Inc r1::is' -> URMSucc(r1)::aux is' listeLabels
+		|Zero r1::is' -> URMZero(r1)::aux is' listeLabels
+		|EqPredicate(r1,r2,label)::is' -> URMJump(r1, r2, (label_to_line label listeLabels))::aux is' listeLabels
+		|Copy(r1,r2)::is' -> URMCopy(r1,r2)::aux is' listeLabels
+		|_::is' -> aux is' listeLabels
 		(*|i::is' -> i::aux is'*)
-	in aux is (*state state à garder ?? *)
+	in suppression_liste is [] [] 0 (*state state à garder ?? *)
 ;;
 
 (* Compilation totale *)
