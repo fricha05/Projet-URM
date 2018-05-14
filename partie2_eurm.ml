@@ -124,7 +124,7 @@ let dec_out (is, state)  =
 		    Inc(getStateRegister state)::
 		    Sub(ri,getStateRegister state)::aux is' (*ri : registre index*)
 	    |i::is' -> i::aux is'
-	in (aux is, state)
+	in (aux is, setNewStateRegister state)
 ;;
 
 let mult_out (is, state) =
@@ -139,7 +139,7 @@ let mult_out (is, state) =
 			LTPredicate(getStateRegister state, ri2,  getStateLabel state):: (* si valeurs différentes, boucler *)
 			aux is'
 	    |i::is' -> i::aux is'
-	in (aux is, setNewStateLabel state)
+	in (aux is, setNewStateRegister (setNewStateLabel state))
 ;;
 
 let zero_predicate_out (is, state) = 
@@ -151,7 +151,7 @@ let zero_predicate_out (is, state) =
 			EqPredicate(ri, getStateRegister state, label)::
 			aux is'
 		|i::is' -> i::aux is'
-	in (aux is, state)
+	in (aux is, setNewStateRegister state)
 ;;
 
 let geqpredicate_out (is, state) = 
@@ -206,7 +206,7 @@ let add_out (is, state) =
 			GTPredicate(ri2, getStateRegister state, getStateLabel state)::
 			aux is'
 	    |i::is' -> i::aux is'
-	in (aux is, setNewStateLabel state)
+	in (aux is, setNewStateRegister (setNewStateLabel state))
 ;;
 
 let sub_out (is, state) = 
@@ -234,7 +234,7 @@ let sub_out (is, state) =
 
 				aux is'
 			|i::is' -> i::aux is'
-	in (aux is, setNewStateLabel (setNewStateLabel (setNewStateLabel state)))
+	in (aux is, setNewStateRegister (setNewStateRegister (setNewStateLabel (setNewStateLabel (setNewStateLabel state)))))
 ;;
 
 let gtpredicate_out (is, state) = 
@@ -259,7 +259,7 @@ let gtpredicate_out (is, state) =
 			Label(getStateLabel (setNewStateLabel state))::
 			aux is'
 		|i::is' -> i::aux is'
-	in (aux is, setNewStateLabel (setNewStateLabel state))
+	in (aux is, setNewStateRegister (setNewStateLabel (setNewStateLabel state)))
 ;;
 
 let compile_stage2 (is, state) = gtpredicate_out( sub_out( add_out((is,state)) ) );;
@@ -274,15 +274,16 @@ let rec code_a_partir_du_label is label =
 	|i::is' -> code_a_partir_du_label is' label
 ;;
 
-(** à vérifier, Goto me parait pas correct **)
-
 let goto_out (is, state) = 
 	let rec aux is =
 		match is with
 		|[] -> []
-		|Goto(label)::is' -> aux (code_a_partir_du_label is' label)
+		|Goto(label)::is' -> 
+			Zero(getStateRegister state)::
+			EqPredicate(getStateRegister state, getStateRegister state, label)::
+			aux is'
 		|i::is' -> i::aux is'
-	in (aux is, setNewStateLabel (setNewStateLabel state))
+	in (aux is, setNewStateRegister state)
 ;;
 
 let compile_stage3 (is, state) = goto_out (is, state);;
