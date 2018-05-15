@@ -8,6 +8,13 @@
 	Etudiants - Florian RICHARD et Oscar FALMER 
 	Fichier - Partie 2 EURM
 
+--Informations générales--
+
+labels commencent à 1
+State("1",1) label en string en premier, state montrent le premier index de registre dispo à utiliser et pareil pour le label
+
+VERIFIER LE SENS DE TOUTES LES COMPARAISONS
+
 *)
 
 
@@ -18,14 +25,6 @@ let rec compile_comment_out is =
     |[] -> []
     |Comment s::is' -> compile_comment_out is'
     |i::is' -> i::compile_comment_out is'
-;;
-
-let compile_comment_out' is =
-    let is_not_comment i =
-        match i with
-        |Comment _ -> false
-        |_ -> true
-        in List.filter is_not_comment is
 ;;
 
 let rec compile_label_out is =
@@ -50,24 +49,24 @@ let max a b = if (a > b) then a else b;;
 let max_ter a b c = max (max a b) c ;;
 
 let rec create_state_reg is =
-	let rec aux is regid =
+	let rec aux is regidmax =
 		match is with
-		|[] -> (regid+1)
-		|Add(r1,r2)::is' -> aux is' (max_ter r1 r2 regid) 
-		|Copy(r1,r2)::is' -> aux is' (max_ter r1 r2 regid) 
-		|Dec(r1)::is' -> aux is' (max r1 regid) 
-		|EqPredicate(r1,r2,l)::is' -> aux is' (max_ter r1 r2 regid) 
-		|GEqPredicate(r1,r2,l)::is' -> aux is' (max_ter r1 r2 regid) 
-		|GTPredicate(r1,r2,l)::is' -> aux is' (max_ter r1 r2 regid) 
-		|Inc r1::is' -> aux is' (max r1 regid) 
-		|LEqPredicate(r1,r2,l)::is' -> aux is' (max_ter r1 r2 regid) 
-		|LTPredicate(r1,r2,l)::is' -> aux is' (max_ter r1 r2 regid) 
-		|Mult(r1,r2)::is' -> aux is' (max_ter r1 r2 regid) 
-		|Sub(r1,r2)::is' -> aux is' (max_ter r1 r2 regid) 
-		|Zero r1::is' -> aux is' (max r1 regid) 
-		|ZeroPredicate(r1,l)::is' -> aux is' (max r1 regid) 
-		|i::is' -> (aux is' regid)
-	in aux is 0
+		|[] -> (regidmax+1)
+		|Add(r1,r2)::is' -> aux is' (max_ter r1 r2 regidmax) 
+		|Copy(r1,r2)::is' -> aux is' (max_ter r1 r2 regidmax) 
+		|Dec(r1)::is' -> aux is' (max r1 regidmax) 
+		|EqPredicate(r1,r2,l)::is' -> aux is' (max_ter r1 r2 regidmax) 
+		|GEqPredicate(r1,r2,l)::is' -> aux is' (max_ter r1 r2 regidmax) 
+		|GTPredicate(r1,r2,l)::is' -> aux is' (max_ter r1 r2 regidmax) 
+		|Inc r1::is' -> aux is' (max r1 regidmax) 
+		|LEqPredicate(r1,r2,l)::is' -> aux is' (max_ter r1 r2 regidmax) 
+		|LTPredicate(r1,r2,l)::is' -> aux is' (max_ter r1 r2 regidmax) 
+		|Mult(r1,r2)::is' -> aux is' (max_ter r1 r2 regidmax) 
+		|Sub(r1,r2)::is' -> aux is' (max_ter r1 r2 regidmax) 
+		|Zero r1::is' -> aux is' (max r1 regidmax) 
+		|ZeroPredicate(r1,l)::is' -> aux is' (max r1 regidmax) 
+		|i::is' -> (aux is' regidmax)
+	in aux is 0 (* par défaut : commence à 0 *)
 ;;
 
 let create_state is = (is, State(create_state_label is, create_state_reg is));;
@@ -77,7 +76,7 @@ let compile_state_register *)
 
 (* nombre de registres maximum + 1 : state *)
 
-let compile_preprocess is = create_state (compile_label_out(compile_comment_out' is));;
+let compile_preprocess is = create_state (compile_label_out(compile_comment_out is));;
 
 (* let state = (Label, Registre);; *)
 (* prochain label utilisable et prochain registre utilisable *)
@@ -102,19 +101,9 @@ let setNewStateLabel state =
 	| State(label, reg) -> State(string_of_int ((int_of_string label) + 1), reg)
 ;;
 
-
-(*déjà écrit dans projet-florian 
-let rec compile_label_out is =
-	let rec aux is acc =
-		match is with (* is: instructions *)
-		|[] -> []
-		|Label s::is' -> ("Label " ^ acc) :: (aux is' (acc+1))
-		|i::is' -> i::(aux is' acc)
-	in aux is 1;
-;;*)
-
 (* Etape 1 *)
 
+(* OK *)
 let dec_out (is, state)  =
 	let rec aux is =
 	    match is with
@@ -122,18 +111,20 @@ let dec_out (is, state)  =
 	    |Dec(ri)::is' -> 
 		    Zero(getStateRegister state)::
 		    Inc(getStateRegister state)::
-		    Sub(ri,getStateRegister state)::aux is' (*ri : registre index*)
+		    Sub(ri,getStateRegister state)::
+		    aux is' (*ri : registre index*)
 	    |i::is' -> i::aux is'
 	in (aux is, setNewStateRegister state)
 ;;
 
+(* OK, corrigé boucle infinie *)
 let mult_out (is, state) =
 	let rec aux is = 
 	    match is with
 	    |[] -> []
-	    |Mult(ri1,ri2)::is' -> 
+	    |Mult(ri1,ri2)::is' ->
+	    	Zero(getStateRegister state):: 
 			Label(getStateLabel state)::
-			Zero(getStateRegister state)::
 			Add(ri1, ri1)::
 			Inc(getStateRegister state)::
 			LTPredicate(getStateRegister state, ri2,  getStateLabel state):: (* si valeurs différentes, boucler *)
@@ -142,6 +133,7 @@ let mult_out (is, state) =
 	in (aux is, setNewStateRegister (setNewStateLabel state))
 ;;
 
+(* OK *)
 let zero_predicate_out (is, state) = 
 	let rec aux is = 
 		match is with
@@ -154,6 +146,7 @@ let zero_predicate_out (is, state) =
 	in (aux is, setNewStateRegister state)
 ;;
 
+(* OK *)
 let geqpredicate_out (is, state) = 
 	let rec aux is = 
 		match is with
@@ -166,6 +159,7 @@ let geqpredicate_out (is, state) =
 	in (aux is, state)
 ;;
 
+(* OK *)
 let leqpredicate_out (is, state) = 
 	let rec aux is = 
 		match is with
@@ -178,6 +172,7 @@ let leqpredicate_out (is, state) =
 	in (aux is, state)
 ;;
 
+(* OK *)
 let ltpredicate_out (is, state) = 
 	let rec aux is = 
 		match is with
@@ -189,18 +184,20 @@ let ltpredicate_out (is, state) =
 	in (aux is, state)
 ;;
 
+(* OK *)
 let compile_stage1 (is, state) = ltpredicate_out (leqpredicate_out (geqpredicate_out (zero_predicate_out (mult_out (dec_out (is,state))))));;
 
 
 (* Etape 2 *)
 
+(* OK *)
 let add_out (is, state) = 
 	let rec aux is = 
 	    match is with
 	    |[] -> []
 	    |Add(ri1,ri2)::is' -> 
+	    	Zero(getStateRegister state)::
 			Label(getStateLabel state)::
-			Zero(getStateRegister state)::
 			Inc(ri1)::
 			Inc(getStateRegister state)::
 			GTPredicate(ri2, getStateRegister state, getStateLabel state)::
@@ -209,41 +206,46 @@ let add_out (is, state) =
 	in (aux is, setNewStateRegister (setNewStateLabel state))
 ;;
 
+(* OK *)
 let sub_out (is, state) = 
 	let rec aux is = 
 		match is with
 			|[] -> []
-			|Sub(ri1,ri2)::is' -> 
+			|Sub(ri1,ri2)::is' -> (* A - B *)
 
-				(* A : valeur tampon égale à r2 *)
-				Label(getStateLabel state)::
+				(* A : valeur tampon égale à r1 *)
 				Zero(getStateRegister state)::
-				GTPredicate(getStateRegister state, ri2, getStateLabel state)::
+				Label(getStateLabel state)::
+				Inc(getStateRegister state)::
+				GTPredicate(ri1, getStateRegister state, getStateLabel state)::
 
-				(* B : valeur tampon égale à r1 *)
-				Label(getStateLabel (setNewStateLabel state))::
+				(* B : valeur tampon égale à r2 *)
 				Zero(getStateRegister (setNewStateRegister state))::
-				GTPredicate(getStateRegister (setNewStateRegister state), ri2, getStateLabel (setNewStateLabel state))::
+				Label(getStateLabel (setNewStateLabel state))::
+				Inc((getStateRegister (setNewStateRegister state)))::
+				GTPredicate(ri2, getStateRegister (setNewStateRegister state), getStateLabel (setNewStateLabel state))::
 
 				Zero(ri1)::
-
 				Label(getStateLabel (setNewStateLabel (setNewStateLabel state)))::
 				Inc(ri1)::
-				Inc(getStateRegister state):: (* Incrémente A *)
-				GTPredicate(getStateRegister (setNewStateRegister state), getStateRegister state, getStateLabel (setNewStateLabel (setNewStateLabel state))):: (* On compare A et B *)
+				Inc(getStateRegister (setNewStateRegister state)):: (* Incrémente B *)
+				GTPredicate(getStateRegister state, getStateRegister (setNewStateRegister state), getStateLabel (setNewStateLabel (setNewStateLabel state))):: (* On compare A et B *)
 
 				aux is'
 			|i::is' -> i::aux is'
 	in (aux is, setNewStateRegister (setNewStateRegister (setNewStateLabel (setNewStateLabel (setNewStateLabel state)))))
 ;;
 
+(* OK *)
 let gtpredicate_out (is, state) = 
 	let rec aux is = 
 		match is with
 		|[] -> []
 		|GTPredicate(ri1, ri2, label)::is' -> 
 
+			(* si égal, saute *)
 			EqPredicate(ri1, ri2, getStateLabel (setNewStateLabel state))::
+			(* sinon *)
 
 			(* A : valeur tampon *)
 			Zero(getStateRegister state)::
@@ -251,8 +253,8 @@ let gtpredicate_out (is, state) =
 			Label(getStateLabel state)::
 			Inc(getStateRegister state)::
 			
-			EqPredicate(getStateRegister state, ri2, label)::
-			EqPredicate(getStateRegister state, ri1, getStateLabel (setNewStateLabel state))::
+			EqPredicate(getStateRegister state, ri1, label)::
+			EqPredicate(getStateRegister state, ri2, getStateLabel (setNewStateLabel state))::
 
 			Goto(getStateLabel state)::
 
@@ -262,6 +264,7 @@ let gtpredicate_out (is, state) =
 	in (aux is, setNewStateRegister (setNewStateLabel (setNewStateLabel state)))
 ;;
 
+(* OK *)
 let compile_stage2 (is, state) = gtpredicate_out( sub_out( add_out((is,state)) ) );;
 
 (* Etape 3 *)
@@ -274,6 +277,7 @@ let compile_stage2 (is, state) = gtpredicate_out( sub_out( add_out((is,state)) )
 	|i::is' -> code_a_partir_du_label is' label
 ;;*)
 
+(* OK *)
 let goto_out (is, state) = 
 	let rec aux is =
 		match is with
@@ -286,6 +290,7 @@ let goto_out (is, state) =
 	in (aux is, setNewStateRegister state)
 ;;
 
+(* OK *)
 let compile_stage3 (is, state) = goto_out (is, state);;
 
 (* Etape 4 *)
@@ -300,13 +305,20 @@ let compile_stage3 (is, state) = goto_out (is, state);;
 	in aux is 0
 ;;*)
 
+(* fst : premier élément d'un tuple, snd : second élément d'un tuple *)
+(* OK *)
 let rec label_to_line label listeLabels = 
 	if fst (List.hd listeLabels) = label
 		then snd (List.hd listeLabels)
 	else
 		label_to_line label (List.tl listeLabels)
 
-(* premiere ligne : index 0 *)
+(* 
+premiere ligne : index 0 
+création d'une liste de tuples d'index et de la ligne suivante correspondante
+*)
+
+(* OK *)
 let compile_stage4 (is, state) =
 	let rec suppression_liste is isFinal listeLabels acc =
 		match is with
