@@ -2,10 +2,10 @@
 
 
 
-(* 
+(*
 
 	Projet - Machine a registres non limites
-	Etudiants - Florian RICHARD et Oscar FALMER 
+	Etudiants - Florian RICHARD et Oscar FALMER
 	Fichier - Partie 1 URM
 
 *)
@@ -116,8 +116,8 @@ let reg_compar reg1 reg2 =
 (* Recupere valeur à un indice du registre *)
 
 let rec regs_get_value_from_idx regList reg_idx =
-	if regList = [] (* si liste vite : erreur *)
-		then failwith "failed - regs_get_value_from_idx"
+	if regList = [] (* si liste vide : erreur *)
+		then 0
 	else
 		match (List.hd regList) with
 		| Reg(index, value) ->
@@ -130,8 +130,8 @@ let rec regs_get_value_from_idx regList reg_idx =
 (* Recupere la liste à partir d'un indice du registre *)
 
 let rec regs_get_list_from_idx regList reg_id =
-	if regList = [] (* si liste vite : erreur *)
-		then failwith "failed - regs_get_list_from_idx"
+	if regList = []
+		then [Reg(reg_id, 0)]
 	else
 		match (List.hd regList) with
 		|Reg(index, value) ->
@@ -147,7 +147,7 @@ on modifie ce qu'il y a à reg_idx par ce qu'il y a à reg_idy*)
 let copy_from_idy_to_idx regList reg_idx reg_idy =
 	let rec aux l1 l2 lOriginal idx idy =
 		if l1 = []
-			then failwith "failed - URMCopy_from_idy_to_idx"
+			then aux (lOriginal@[Reg(reg_idx, 0)]) [] (lOriginal@[Reg(reg_idx, 0)]) idx idy
 		else
 			match List.hd l1 with
 			|Reg(index, value)->
@@ -163,7 +163,7 @@ let copy_from_idy_to_idx regList reg_idx reg_idy =
 let succ_reg_from_idx regList regidx =
 	let rec aux l1 l2 =
 		if l1 = []
-			then failwith "failed - URMSucc_reg_from_idx"
+			then (List.rev l2)@[Reg(regidx, (regs_get_value_from_idx regList regidx)+1)]
 		else
 			match List.hd l1 with
 			|Reg(index, value)->
@@ -196,7 +196,7 @@ let rec regs_get_string regList =
 let change_reg_at_idx regList regidx newValue =
 	let rec aux l1 l2 =
 		if l1 = []
-			then failwith "failed - change_reg_at_idx"
+			then (List.rev l2)@[Reg(regidx, newValue)]
 		else
 			match List.hd l1 with
 			|Reg(index, value)->
@@ -236,8 +236,8 @@ let run_cmd_aux regList instptr =
 					then jump_aux (instptr_move_down instpr_aux) (acc+1)
 				else {instptr = instpr_aux; regs = regList}
 			in jump_aux instptr ((get_instptr_line instptr)-line)
-    |1 -> {instptr = (instptr_move_down instptr); regs = regList}
-		|_-> failwith "failed - run_cmd_aux"
+    |_ -> {instptr = (instptr_move_down instptr); regs = regList}
+		(* |_-> failwith "failed - run_cmd_aux" *)
 		end
 	|URMSucc(regidx) -> {instptr = (instptr_move_down instptr); regs = (succ_reg_from_idx regList regidx)}
 	|URMZero(regidx) -> {instptr = (instptr_move_down instptr); regs = (change_reg_at_idx regList regidx 0)}
