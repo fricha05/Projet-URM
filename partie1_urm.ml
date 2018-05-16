@@ -160,7 +160,7 @@ let copy_from_idy_to_idx regList reg_idx reg_idy =
 let rec succ_reg_from_idx regList regidx =
 	let rec aux l1 l2 =
 		match l1 with
-		|[] -> (List.rev l2)@[Reg(regidx, 1)]
+		|[] -> (List.rev l2)@[Reg(regidx, 0)]
 		|Reg(index, value)::l1'->
 			if(index = regidx)
 				then (List.rev l2)@[Reg(index, (value+1))]@l1'
