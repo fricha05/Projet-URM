@@ -39,14 +39,14 @@ EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]*)
 
 (*Inc*)
 (*let eurm_factorial = [Inc(1); Quit] OK*)
-(* ---------> let eurm_factorial = [Inc(3); Quit] PAS OK VALEUR BIZARRE, CHANGER succ_reg_from_idx POUR CAS OU IL N Y PAS DE VALEUR *)
+(* let eurm_factorial = [Inc(3); Quit] OK*)
 
 (*Zero*)
 (*let eurm_factorial = [Zero(1); Quit] OK*)
 (*let eurm_factorial = [Zero(3); Quit] OK*)
 
 (*Copy*)
-(* ---------> let eurm_factorial = [Copy(1,2); Quit] PAS OK, ne marche pas bien quand un des deux n'existe pas *)
+(* let eurm_factorial = [Copy(1,2); Quit] OK*)
 (* let eurm_factorial = [Zero(2);Copy(1,2); Quit] OK *)
 
 (*Quit*)
@@ -64,10 +64,10 @@ EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]*)
 (**** 2emes TESTS ****)
 
 (*Add*)
-(* ---------> let eurm_factorial = [Zero(3); Inc(3); Inc(3); Inc(3); Add(1,3); Quit] Inc ne marche pas *)
+let eurm_factorial = [Zero(3); Inc(3); Inc(3); Inc(3); Add(1,3); Quit] 
 
 (*Sub*)
-(*let eurm_factorial = [Sub(1,3); Quit] PAS OK*)
+(* let eurm_factorial = [Sub(1,3); Quit] PAS OK*)
 
 (*GTPredicate*)
 (*let eurm_factorial = [Sub(1,3); Quit]*)
