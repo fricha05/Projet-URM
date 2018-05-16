@@ -18,6 +18,16 @@ VERIFIER LE SENS DE TOUTES LES COMPARAISONS
 *)
 
 
+(* fst : premier élément d'un tuple, snd : second élément d'un tuple *)
+(* OK *)
+let rec label_to_line label listeLabels =
+	if listeLabels = []
+		then failwith "Erreur label_to_line"
+	else if fst (List.hd listeLabels) = label
+		then (Printf.printf "Label trouve !! \n\n " ; snd (List.hd listeLabels))
+	else
+		(Printf.printf "Label %s (à trouver %s) - " (fst (List.hd listeLabels)) label ; label_to_line label (List.tl listeLabels))
+
 
 
 let rec compile_comment_out is =
@@ -27,19 +37,33 @@ let rec compile_comment_out is =
     |i::is' -> i::compile_comment_out is'
 ;;
 
-let rec compile_label_out is =
-	let rec aux is acc =
+
+let rec compile_label_out is  =
+	let rec aux is isFinal acc listeLabels =
 		match is with (* is: instructions *)
-		|[] -> [] (*, State("0",acc)*)
-		|Label s::is' -> Label(string_of_int acc) :: (aux is' (acc+1)) (* "Label " ^  *)
-		|i::is' -> i::(aux is' acc)
-	in aux is 1;
+		|[] -> auxBis isFinal listeLabels (*, State("0",acc)*)
+		|Label l::is' -> aux is' (isFinal@[Label (string_of_int acc)]) (acc+1) ((l,acc)::listeLabels) (* "Label " ^ - (Printf.printf "Nouveau label : %i - " acc ;  *)
+		|i::is' -> aux is' (isFinal@[i]) acc listeLabels
+	and auxBis isBis listeLabels =
+		match isBis with
+		| [] -> []
+		| EqPredicate(r1,r2,label)::is' -> EqPredicate(r1,r2, string_of_int (label_to_line label listeLabels))::(auxBis is' listeLabels)
+		| GTPredicate(r1,r2,label)::is' -> GTPredicate(r1,r2, string_of_int (label_to_line label listeLabels))::(auxBis is' listeLabels)
+		| LTPredicate(r1,r2,label)::is' -> LTPredicate(r1,r2, string_of_int (label_to_line label listeLabels))::(auxBis is' listeLabels)
+		| LEqPredicate(r1,r2,label)::is' -> LEqPredicate(r1,r2, string_of_int (label_to_line label listeLabels))::(auxBis is' listeLabels)
+		| GEqPredicate(r1,r2,label)::is' -> GEqPredicate(r1,r2, string_of_int (label_to_line label listeLabels))::(auxBis is' listeLabels)
+		| ZeroPredicate(r1,label)::is' -> ZeroPredicate(r1, string_of_int (label_to_line label listeLabels))::(auxBis is' listeLabels)
+		| Goto(label)::is' -> Goto(string_of_int (label_to_line label listeLabels))::(auxBis is' listeLabels)
+		| q::is' -> q::(auxBis is' listeLabels)
+	in aux is [] 1 [];
 ;;
+
+(*modifier aussi dans EqPredicate OK*)
 
 let rec create_state_label is =
 	let rec aux is acc =
 		match is with
-		|[] -> string_of_int acc
+		|[] -> (Printf.printf "Prochain label disponible %i \n" acc; string_of_int acc)
 		|Label s::is' -> aux is' (acc+1)
 		|i::is' -> (aux is' acc)
 	in aux is 1;
@@ -51,7 +75,7 @@ let max_ter a b c = max (max a b) c ;;
 let rec create_state_reg is =
 	let rec aux is regidmax =
 		match is with
-		|[] -> (Printf.printf "%d \n\n" regidmax; (regidmax+1))
+		|[] -> (Printf.printf "RegMax : %d \n\n" regidmax; (regidmax+1))
 		|Add(r1,r2)::is' -> aux is' (max_ter r1 r2 regidmax)
 		|Copy(r1,r2)::is' -> aux is' (max_ter r1 r2 regidmax)
 		|Dec(r1)::is' -> aux is' (max r1 regidmax)
@@ -305,18 +329,15 @@ let compile_stage3 (is, state) = goto_out (is, state);;
 	in aux is 0
 ;;*)
 
-(* fst : premier élément d'un tuple, snd : second élément d'un tuple *)
-(* OK *)
-let rec label_to_line label listeLabels =
-	if fst (List.hd listeLabels) = label
-		then snd (List.hd listeLabels)
-	else
-		label_to_line label (List.tl listeLabels)
-
 (*
 premiere ligne : index 0
 création d'une liste de tuples d'index et de la ligne suivante correspondante
 *)
+
+let rec print_list = function 
+[] -> (Printf.printf ("\n\n"))
+| (label, nb)::l -> Printf.printf "(label : %s, nb : %d)" label nb ; print_string " " ; print_list l
+
 
 (* OK *)
 let compile_stage4 (is, state) =
@@ -330,7 +351,7 @@ let compile_stage4 (is, state) =
 		|[] -> []
 		|Inc r1::is' -> URMSucc(r1)::aux is' listeLabels
 		|Zero r1::is' -> URMZero(r1)::aux is' listeLabels
-		|EqPredicate(r1,r2,label)::is' -> URMJump(r1, r2, (label_to_line label listeLabels))::aux is' listeLabels
+		|EqPredicate(r1,r2,label)::is' -> (print_list listeLabels; Printf.printf "Label à trouver %s - " label ; URMJump(r1, r2, (label_to_line label listeLabels))::aux is' listeLabels)
 		|Copy(r1,r2)::is' -> URMCopy(r1,r2)::aux is' listeLabels
 		|_::is' -> aux is' listeLabels
 		(*|i::is' -> i::aux is'*)

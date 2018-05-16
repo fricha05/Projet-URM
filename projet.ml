@@ -64,13 +64,17 @@ EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]
 (**** 2emes TESTS ****)
 
 (*Add*)
-(*let eurm_factorial = [Inc 1; Inc 1; Add(1,3); Quit] OK*)
+(*let eurm_factorial = [Inc 1; Inc 1; Add(1,3); Quit] A retester*)
 
-(*Sub*)
-let eurm_factorial = [Inc 1; Sub(1,3); Quit] 
+let eurm_factorial = [Zero 3; Inc 3; Inc 3; Inc 1; Inc 1; Add(1,3); Quit]
 
 (*GTPredicate*)
-(*let eurm_factorial = [Sub(1,3); Quit]*)
+(*let eurm_factorial = [GTPredicate(1,3,"Hello"); Label "Hello"; Inc(1); Label "Test"; Quit] OK*)
+(*let eurm_factorial = [GTPredicate(1,3,"Test"); Label "Hello"; Inc(1); Label "Test"; Quit] OK*)
+(*let eurm_factorial = [GTPredicate(3,1,"Test"); Label "Hello"; Inc(1); Label "Test"; Quit] OK*)
+
+(*Sub*)
+(*let eurm_factorial = [Inc 1; Sub(1,3); Quit] *)
 
 
 
