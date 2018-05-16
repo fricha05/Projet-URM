@@ -29,10 +29,10 @@ urm_run_trace m;;*)
 (** Tests Rendu 2 **)
 
 
-(*let eurm_factorial = [Comment "Compute r1! and place the result in r1"; ZeroPredicate (1, "r1=0");
+let eurm_factorial = [Comment "Compute r1! and place the result in r1"; ZeroPredicate (1, "r1=0");
 Goto "r1>0"; Comment "r1 holds 0"; Label "r1=0"; Inc 1; Goto "done"; Comment "r1 holds a positive integer";
 Label "r1>0"; Copy (2, 1); Zero 1; Inc 1; Zero 3; Inc 3; Comment "main loop"; Label "loop"; Mult (1, 3);
-EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]*)
+EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]
 
 
 (**** 1er TESTS - ne pas toucher let m = urm_mk prog [Reg (1,5)];; ****)
@@ -64,10 +64,10 @@ EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]*)
 (**** 2emes TESTS ****)
 
 (*Add*)
-let eurm_factorial = [Zero 1; Inc 1; Inc 1; Add(1,3); Quit]
+(*let eurm_factorial = [Inc 1; Inc 1; Add(1,3); Quit] OK*)
 
 (*Sub*)
-(* let eurm_factorial = [Sub(1,3); Quit] PAS OK*)
+let eurm_factorial = [Inc 1; Sub(1,3); Quit] 
 
 (*GTPredicate*)
 (*let eurm_factorial = [Sub(1,3); Quit]*)

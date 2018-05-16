@@ -51,7 +51,7 @@ let max_ter a b c = max (max a b) c ;;
 let rec create_state_reg is =
 	let rec aux is regidmax =
 		match is with
-		|[] -> (regidmax+1)
+		|[] -> (Printf.printf "%d \n\n" regidmax; (regidmax+1))
 		|Add(r1,r2)::is' -> aux is' (max_ter r1 r2 regidmax)
 		|Copy(r1,r2)::is' -> aux is' (max_ter r1 r2 regidmax)
 		|Dec(r1)::is' -> aux is' (max r1 regidmax)
@@ -339,4 +339,6 @@ let compile_stage4 (is, state) =
 
 (* Compilation totale *)
 
-let urm_from_eurm eurmcmdList = compile_stage4 (compile_stage3 (compile_stage2 (compile_stage1 (eurmcmdList, State("0", 0)) ) ) );;
+(*let urm_from_eurm eurmcmdList = compile_stage4 (compile_stage3 (compile_stage2 (compile_stage1 (eurmcmdList, State("0", 0)) ) ) );;*)
+let urm_from_eurm eurmcmdList = compile_stage4 (compile_stage3 (compile_stage2 (compile_stage1 ( compile_preprocess(eurmcmdList) ) ) ) );;
+
