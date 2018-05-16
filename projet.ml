@@ -64,7 +64,7 @@ EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]*)
 (**** 2emes TESTS ****)
 
 (*Add*)
-let eurm_factorial = [Zero(3); Inc(3); Inc(3); Inc(3); Add(1,3); Quit] 
+let eurm_factorial = [Zero 1; Inc 1; Inc 1; Add(1,3); Quit]
 
 (*Sub*)
 (* let eurm_factorial = [Sub(1,3); Quit] PAS OK*)
