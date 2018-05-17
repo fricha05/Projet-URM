@@ -12,14 +12,16 @@
 
 labels commencent à 1
 State("1",1) label en string en premier, state montrent le premier index de registre dispo à utiliser et pareil pour le label
-
-VERIFIER LE SENS DE TOUTES LES COMPARAISONS
-
 *)
 
 
 (* fst : premier élément d'un tuple, snd : second élément d'un tuple *)
 (* OK *)
+
+let rec print_list = function 
+[] -> (Printf.printf ("\n\n"))
+| (label, nb)::l -> Printf.printf "(label : %s, nb : %d)" label nb ; print_string " " ; print_list l
+
 let rec label_to_line label listeLabels =
 	if listeLabels = []
 		then failwith "Erreur label_to_line"
@@ -37,9 +39,9 @@ let rec compile_comment_out is =
 
 let rec compile_label_out is  =
 	let rec aux is isFinal acc listeLabels =
-		match is with (* is: instructions *)
-		|[] -> (Printf.printf "Lecture de la Liste des Labels en compile label out : "; print_list listeLabels ;auxBis isFinal listeLabels) (*, State("0",acc)*)
-		|Label l::is' -> aux is' (isFinal@[Label (string_of_int acc)]) (acc+1) ((l,acc)::listeLabels) (* "Label " ^ - (Printf.printf "Nouveau label : %i - " acc ;  *)
+		match is with 
+		|[] -> (Printf.printf "Lecture de la Liste des Labels en compile label out : "; print_list listeLabels ;auxBis isFinal listeLabels)
+		|Label l::is' -> aux is' (isFinal@[Label (string_of_int acc)]) (acc+1) ((l,acc)::listeLabels)
 		|i::is' -> aux is' (isFinal@[i]) acc listeLabels
 	and auxBis isBis listeLabels =
 		match isBis with
@@ -54,8 +56,6 @@ let rec compile_label_out is  =
 		| q::is' -> q::(auxBis is' listeLabels)
 	in aux is [] 1 [];
 ;;
-
-(*modifier aussi dans EqPredicate OK*)
 
 let rec create_state_label is =
 	let rec aux is acc =
@@ -159,7 +159,6 @@ let dec_out (is, state)  =
 	in aux is [] state
 ;;
 
-(* OK, corrigé boucle infinie *)
 let mult_out (is, state) =
 	let rec aux is finalIs state =
 	    match is with
@@ -197,7 +196,6 @@ let mult_out (is, state) =
 	in aux is [] state
 ;;
 
-(* OK *)
 let zero_predicate_out (is, state) =
 	let rec aux is finalIs state =
 		match is with
@@ -211,7 +209,6 @@ let zero_predicate_out (is, state) =
 	in aux is [] state
 ;;
 
-(* OK *)
 let geqpredicate_out (is, state) =
 	let rec aux is =
 		match is with
@@ -224,7 +221,6 @@ let geqpredicate_out (is, state) =
 	in (aux is, state)
 ;;
 
-(* OK *)
 let leqpredicate_out (is, state) =
 	let rec aux is =
 		match is with
@@ -237,7 +233,6 @@ let leqpredicate_out (is, state) =
 	in (aux is, state)
 ;;
 
-(* OK *)
 let ltpredicate_out (is, state) =
 	let rec aux is =
 		match is with
@@ -249,12 +244,10 @@ let ltpredicate_out (is, state) =
 	in (aux is, state)
 ;;
 
-(* OK *)
 let compile_stage1 (is, state) = ltpredicate_out (leqpredicate_out (geqpredicate_out (zero_predicate_out (mult_out (dec_out (is,state))))));;
 
 (* Etape 2 *)
 
-(* OK *)
 let add_out (is, state) =
 	let rec aux is finalIs state =
 	    match is with
@@ -275,7 +268,6 @@ let add_out (is, state) =
 	in aux is [] state
 ;;
 
-(* OK *)
 let sub_out (is, state) =
 	let rec aux is finalIs state =
 		match is with
@@ -306,8 +298,6 @@ let sub_out (is, state) =
 	in aux is [] state
 ;;
 
-(* OK *)
-
 let gtpredicate_out (is, state) =
 	let rec aux is finalIs state =
 		match is with
@@ -334,20 +324,10 @@ let gtpredicate_out (is, state) =
 	in aux is [] state
 ;;
 
-(* OK *)
 let compile_stage2 (is, state) = gtpredicate_out( sub_out( add_out((is,state)) ) );;
 
 (* Etape 3 *)
 
-(*let rec code_a_partir_du_label is label =
-	match is with
-	|[] -> []
-	|Label l::is' -> if (l = label) then is'
-					else code_a_partir_du_label is' label
-	|i::is' -> code_a_partir_du_label is' label
-;;*)
-
-(* OK *)
 let goto_out (is, state) =
 	let rec aux is finalIs state =
 		match is with
@@ -361,32 +341,15 @@ let goto_out (is, state) =
 	in aux is [] state
 ;;
 
-(* OK *)
 let compile_stage3 (is, state) = goto_out (is, state);;
 
 (* Etape 4 *)
-
-(*let label_to_line is label =
-	let rec aux is acc =
-		match is with
-		|[] -> 0
-		|Label l::is' -> if (l = label) then acc  (* à tester *)
-						else aux is' (acc) (* ne compte pas les labels *)
-		|i::is' -> aux is' (acc+1)
-	in aux is 0
-;;*)
 
 (*
 premiere ligne : index 0
 création d'une liste de tuples d'index et de la ligne suivante correspondante
 *)
 
-let rec print_list = function 
-[] -> (Printf.printf ("\n\n"))
-| (label, nb)::l -> Printf.printf "(label : %s, nb : %d)" label nb ; print_string " " ; print_list l
-
-
-(* OK *)
 let compile_stage4 (is, state) =
 	let rec suppression_liste is isFinal listeLabels acc =
 		match is with
@@ -401,13 +364,11 @@ let compile_stage4 (is, state) =
 		|EqPredicate(r1,r2,label)::is' -> (print_list listeLabels; Printf.printf "Label à trouver %s - " label ; URMJump(r1, r2, (label_to_line label listeLabels))::aux is' listeLabels)
 		|Copy(r1,r2)::is' -> URMCopy(r1,r2)::aux is' listeLabels
 		|_::is' -> aux is' listeLabels
-		(*|i::is' -> i::aux is'*)
-	in suppression_liste is [] [] 0 (*state state à garder ?? *)
+	in suppression_liste is [] [] 0
 ;;
 
 (* Compilation totale *)
 
-(*let urm_from_eurm eurmcmdList = compile_stage4 (compile_stage3 (compile_stage2 (compile_stage1 (eurmcmdList, State("0", 0)) ) ) );;*)
 let urm_from_eurm eurmcmdList = compile_stage4 (compile_stage3 (compile_stage2 (compile_stage1 ( compile_preprocess(eurmcmdList) ) ) ) );;
 
 

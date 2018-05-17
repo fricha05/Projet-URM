@@ -85,17 +85,7 @@ Quit]*)
 
 (*let urm_from_eurm eurmcmdList = compile_stage4 (compile_stage3 (compile_stage2 (compile_stage1 (eurmcmdList, State("0", 0)) ) ) )*)
 
-(**** 1er TESTS - ne pas toucher let m = urm_mk prog [Reg (1,5)];; 
-
-
-
-enlever les newRegister à chaque fois ?? 
-
-
-
-
-
-****)
+(**** 1er TESTS - ne pas toucher let m = urm_mk prog [Reg (1,5)];; *)
 
 (*Inc*)
 (*let eurm_factorial = [Inc(1); Quit]*)
