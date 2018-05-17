@@ -16,7 +16,7 @@
 #use "types.ml";;
 #use "partie1_urm.ml";;
 #use "partie2_eurm.ml";;
-#load "str.cma";;
+(*#load "str.cma";;*)
 
 (** Tests Rendu 1 **)
 
@@ -35,10 +35,20 @@ Label "r1>0"; Copy (2, 1); Zero 1; Inc 1; Zero 3; Inc 3; Comment "main loop"; La
 EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]
 
 
-(**** 1er TESTS - ne pas toucher let m = urm_mk prog [Reg (1,5)];; ****)
+(**** 1er TESTS - ne pas toucher let m = urm_mk prog [Reg (1,5)];; 
+
+
+
+enlever les newRegister à chaque fois ?? 
+
+
+
+
+
+****)
 
 (*Inc*)
-(*let eurm_factorial = [Inc(1); Quit] OK*)
+(*let eurm_factorial = [Inc(1); Quit]*)
 (* let eurm_factorial = [Inc(3); Quit] OK*)
 
 (*Zero*)
@@ -57,38 +67,61 @@ EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]
 (*let eurm_factorial = [Zero(1) ; Zero(2); EqPredicate (0, 1, "Done") ; Inc(2) ; Label "Done" ; Quit] OK*)
 
 (*Goto*)
-(*let eurm_factorial = [Goto "Done"; Label "Done"; Inc(1) ; Label "Done2" ; Quit] OK *)
+(*let eurm_factorial = [Goto "Done"; Label "Done"; Inc(1) ; Label "Done2" ; Quit]*)
 (*let eurm_factorial = [Goto "Done2"; Label "Done"; Inc(1) ; Label "Done2" ; Quit] OK *)
 
 
 (**** 2emes TESTS ****)
 
+(*GTPredicate OK*)
+(*let eurm_factorial = [GTPredicate(1,3,"Hello"); Label "Hello"; Inc(1); Label "Test"; Quit]*)
+(*let eurm_factorial = [Zero 3; GTPredicate(1,3,"Test"); Label "Hello"; Inc(1); Label "Test"; Quit] *)
+(*let eurm_factorial = [GTPredicate(3,1,"Test"); Label "Hello"; Inc(1); Label "Test"; Quit] *)
+
 (*Add*)
-(*let eurm_factorial = [Inc 1; Inc 1; Add(1,3); Quit] A retester*)
-
-let eurm_factorial = [Zero 3; Inc 3; Inc 3; Inc 1; Inc 1; Add(1,3); Quit]
-
-(*GTPredicate*)
-(*let eurm_factorial = [GTPredicate(1,3,"Hello"); Label "Hello"; Inc(1); Label "Test"; Quit] OK*)
-(*let eurm_factorial = [GTPredicate(1,3,"Test"); Label "Hello"; Inc(1); Label "Test"; Quit] OK*)
-(*let eurm_factorial = [GTPredicate(3,1,"Test"); Label "Hello"; Inc(1); Label "Test"; Quit] OK*)
+(*let eurm_factorial = [Zero 3; Inc 1; Inc 1; Inc 3; Inc 3; Add(1,3); Quit]*)
+(*let eurm_factorial = [Zero 3; Inc 3; Inc 3; Inc 3; Inc 1; Add(1,3); Quit]*)
 
 (*Sub*)
-(*let eurm_factorial = [Inc 1; Sub(1,3); Quit] *)
-
+(*let eurm_factorial = [Zero 3; Inc 3; Sub(1,3); Quit]*)
 
 
 (**** 3emes TESTS ***
+ltpredicate_out OK
+leqpredicate_out OK
+zero_predicate_out OK
+geqpredicate_out OK
 
-zero_predicate_out
-geqpredicate_out
-leqpredicate_out
-ltpredicate_out
-mult_out
-dec_out
+mult_out OK
+
+dec_out OK
+
+
 *)
 
+(*let eurm_factorial = [Zero 3; GTPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit] *)
 
+(*let eurm_factorial = [Zero 3; LTPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit] *)
+
+(*let eurm_factorial = [Zero 3; LEqPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit]*)
+
+(*let eurm_factorial = [Zero 3; Inc 3; Inc 3; Inc 3; Inc 3; Inc 3; LEqPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit]*)
+
+(*let eurm_factorial = [Zero 3; ZeroPredicate(3,"Test"); Inc(1); Label "Test"; Quit]*)
+
+(*let eurm_factorial = [Zero 3; Inc 3; ZeroPredicate(3,"Test"); Inc(1); Label "Test"; Quit]*)
+
+(*let eurm_factorial = [Zero 3; Inc 1; Quit]*)
+
+(*let eurm_factorial = [Zero 3; GEqPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit] *)
+
+(*let eurm_factorial = [Zero 3; Inc 3; Inc 3; Inc 3; Inc 3; Inc 3; GEqPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit]*)
+
+(*let eurm_factorial = [Zero 3; Inc 3; Inc 3; Inc 3; Inc 3; Inc 3; Inc 3; GEqPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit]*)
+
+(*let eurm_factorial = [Zero 3; Inc 3; Inc 3; Mult(1,3); Quit] *)
+
+(*let eurm_factorial = [Zero 3; Inc 3; Dec 3; Dec 1; Quit]*)
 
 
 let prog = urm_from_eurm eurm_factorial;;
@@ -96,3 +129,9 @@ let prog = urm_from_eurm eurm_factorial;;
 let m = urm_mk prog [Reg (1,5)];;
 
 urm_run m;;
+
+
+
+
+
+

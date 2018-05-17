@@ -28,15 +28,12 @@ let rec label_to_line label listeLabels =
 	else
 		(Printf.printf "Label %s (à trouver %s) - " (fst (List.hd listeLabels)) label ; label_to_line label (List.tl listeLabels))
 
-
-
 let rec compile_comment_out is =
     match is with
     |[] -> []
     |Comment s::is' -> compile_comment_out is'
     |i::is' -> i::compile_comment_out is'
 ;;
-
 
 let rec compile_label_out is  =
 	let rec aux is isFinal acc listeLabels =
@@ -110,9 +107,19 @@ let getStateLabel state =
 	| State(label, reg) -> label
 ;;
 
+let getStateLabelPlus state nb =
+	match state with
+	| State(label, reg) -> (string_of_int ((int_of_string label)+nb))
+;;
+
 let getStateRegister state =
 	match state with
 	| State(label, reg) -> reg
+;;
+
+let getStateRegisterPlus state nb =
+	match state with
+	| State(label, reg) -> (reg+nb)
 ;;
 
 let setNewStateRegister state =
@@ -120,54 +127,75 @@ let setNewStateRegister state =
 	| State(label, reg) -> State(label, (reg+1))
 ;;
 
+let setNewStateRegisterPlus state nb =
+	match state with
+	| State(label, reg) -> State(label, (reg+nb))
+;;
+
 let setNewStateLabel state =
 	match state with
 	| State(label, reg) -> State(string_of_int ((int_of_string label) + 1), reg)
+;;
+
+let setNewStateLabelPlus state nb =
+	match state with
+	| State(label, reg) -> State(string_of_int ((int_of_string label) + nb), reg)
 ;;
 
 (* Etape 1 *)
 
 (* OK *)
 let dec_out (is, state)  =
-	let rec aux is =
+	let rec aux is finalIs state =
 	    match is with
-	    |[] -> []
+	    |[] -> (finalIs, state)
 	    |Dec(ri)::is' ->
-		    Zero(getStateRegister state)::
-		    Inc(getStateRegister state)::
-		    Sub(ri,getStateRegister state)::
-		    aux is' (*ri : registre index*)
-	    |i::is' -> i::aux is'
-	in (aux is, setNewStateRegister state)
+	    	aux is' (finalIs@(
+		    Zero(getStateRegisterPlus state 0)::
+		    Inc(getStateRegisterPlus state 0)::
+		    Sub(ri,getStateRegisterPlus state 0)::
+		    [])) (setNewStateRegisterPlus state 1)
+	    |i::is' -> aux is' (finalIs@[i]) state
+	in aux is [] state
 ;;
 
 (* OK, corrigé boucle infinie *)
 let mult_out (is, state) =
-	let rec aux is =
+	let rec aux is finalIs state =
 	    match is with
-	    |[] -> []
+	    |[] -> (finalIs, state)
 	    |Mult(ri1,ri2)::is' ->
-	    	Zero(getStateRegister state)::
-			Label(getStateLabel state)::
-			Add(ri1, ri1)::
-			Inc(getStateRegister state)::
-			LTPredicate(getStateRegister state, ri2,  getStateLabel state):: (* si valeurs différentes, boucler *)
-			aux is'
-	    |i::is' -> i::aux is'
-	in (aux is, setNewStateRegister (setNewStateLabel state))
+	    	aux is' (finalIs@(
+
+	    	(*Sauvegarde valeur ri1*)
+	    	Zero(getStateRegisterPlus state 1)::
+	    	Label(getStateLabelPlus state 1)::
+	    	Inc(getStateRegisterPlus state 1)::
+	    	LTPredicate(ri1, getStateRegisterPlus state 1, getStateLabelPlus state 1):: (*inverse chelou*)
+
+	    	Zero(getStateRegisterPlus state 0)::
+			Label(getStateLabelPlus state 0)::
+			Add(ri1, getStateRegisterPlus state 1)::
+			Inc(getStateRegisterPlus state 0)::
+			LTPredicate(getStateRegisterPlus state 0, ri2,  getStateLabelPlus state 0):: (* si valeurs différentes, boucler *)
+
+			[])) (setNewStateLabelPlus (setNewStateRegisterPlus state 2) 2)
+	    |i::is' -> aux is' (finalIs@[i]) state
+	in aux is [] state
 ;;
 
 (* OK *)
 let zero_predicate_out (is, state) =
-	let rec aux is =
+	let rec aux is finalIs state =
 		match is with
-		|[] -> []
+		|[] -> (finalIs, state)
 		|ZeroPredicate(ri,label)::is' ->
-			Zero(getStateRegister state)::
-			EqPredicate(ri, getStateRegister state, label)::
-			aux is'
-		|i::is' -> i::aux is'
-	in (aux is, setNewStateRegister state)
+			aux is' (finalIs@(
+			Zero(getStateRegisterPlus state 0)::
+			EqPredicate(ri, getStateRegisterPlus state 0, label)::
+			[])) (setNewStateRegisterPlus state 1)
+		|i::is' -> aux is' (finalIs@[i]) state
+	in aux is [] state
 ;;
 
 (* OK *)
@@ -211,81 +239,86 @@ let ltpredicate_out (is, state) =
 (* OK *)
 let compile_stage1 (is, state) = ltpredicate_out (leqpredicate_out (geqpredicate_out (zero_predicate_out (mult_out (dec_out (is,state))))));;
 
-
 (* Etape 2 *)
 
 (* OK *)
 let add_out (is, state) =
-	let rec aux is =
+	let rec aux is finalIs state =
 	    match is with
-	    |[] -> []
+	    |[] -> (finalIs, state)
 	    |Add(ri1,ri2)::is' ->
-	    	Zero(getStateRegister state)::
-			Label(getStateLabel state)::
+	    	aux is' (finalIs@(
+	    	Zero(getStateRegisterPlus state 0)::
+			EqPredicate(ri2, getStateRegisterPlus state 0, getStateLabelPlus state 1)::
+
+			Label(getStateLabelPlus state 0)::
 			Inc(ri1)::
-			Inc(getStateRegister state)::
-			GTPredicate(ri2, getStateRegister state, getStateLabel state)::
-			aux is'
-	    |i::is' -> i::aux is'
-	in (aux is, setNewStateRegister (setNewStateLabel state))
+			Inc(getStateRegisterPlus state 0)::
+			GTPredicate(getStateRegisterPlus state 0, ri2, getStateLabelPlus state 0):: (*(inversé ?)*)
+
+			Label(getStateLabelPlus state 1)::
+			[])) (setNewStateLabelPlus (setNewStateRegisterPlus state 1) 2 )
+	    |i::is' -> aux is' (finalIs@[i]) state
+	in aux is [] state
 ;;
 
 (* OK *)
 let sub_out (is, state) =
-	let rec aux is =
+	let rec aux is finalIs state =
 		match is with
-			|[] -> []
+			|[] -> (finalIs, state)
 			|Sub(ri1,ri2)::is' -> (* A - B *)
 
+				aux is' (finalIs@(
 				(* A : valeur tampon égale à r1 *)
-				Zero(getStateRegister state)::
-				Label(getStateLabel state)::
-				Inc(getStateRegister state)::
-				GTPredicate(ri1, getStateRegister state, getStateLabel state)::
+				Zero(getStateRegisterPlus state 0)::
+				Label(getStateLabelPlus state 0)::
+				Inc(getStateRegisterPlus state 0)::
+				GTPredicate(getStateRegisterPlus state 0, ri1, getStateLabelPlus state 0):: (*inverse chelou*)
 
 				(* B : valeur tampon égale à r2 *)
-				Zero(getStateRegister (setNewStateRegister state))::
-				Label(getStateLabel (setNewStateLabel state))::
-				Inc((getStateRegister (setNewStateRegister state)))::
-				GTPredicate(ri2, getStateRegister (setNewStateRegister state), getStateLabel (setNewStateLabel state))::
+				Zero(getStateRegisterPlus state 1)::
+				Label(getStateLabelPlus state 1)::
+				Inc(getStateRegisterPlus state 1)::
+				GTPredicate(getStateRegisterPlus state 1,ri2, getStateLabelPlus state 1):: (*inverse chelou*)
 
 				Zero(ri1)::
-				Label(getStateLabel (setNewStateLabel (setNewStateLabel state)))::
+				Label(getStateLabelPlus state 2)::
 				Inc(ri1)::
-				Inc(getStateRegister (setNewStateRegister state)):: (* Incrémente B *)
-				GTPredicate(getStateRegister state, getStateRegister (setNewStateRegister state), getStateLabel (setNewStateLabel (setNewStateLabel state))):: (* On compare A et B *)
+				Inc(getStateRegisterPlus state 1):: (* Incrémente B *)
+				GTPredicate(getStateRegisterPlus state 1, getStateRegisterPlus state 0, getStateLabelPlus state 2):: (* On compare A et B *) (*inverse chelou*)
 
-				aux is'
-			|i::is' -> i::aux is'
-	in (aux is, setNewStateRegister (setNewStateRegister (setNewStateLabel (setNewStateLabel (setNewStateLabel state)))))
+				[])) (setNewStateLabelPlus (setNewStateRegisterPlus state 2) 3 )
+			|i::is' -> aux is' (finalIs@[i]) state
+	in aux is [] state
 ;;
 
 (* OK *)
-let gtpredicate_out (is, state) =
-	let rec aux is =
-		match is with
-		|[] -> []
-		|GTPredicate(ri1, ri2, label)::is' ->
 
+let gtpredicate_out (is, state) =
+	let rec aux is finalIs state =
+		match is with
+		|[] -> (finalIs,state)
+		|GTPredicate(ri1, ri2, label)::is' ->
+			aux is' (finalIs@(
 			(* si égal, saute *)
-			EqPredicate(ri1, ri2, getStateLabel (setNewStateLabel state))::
+			EqPredicate(ri1, ri2, getStateLabelPlus state 1)::
 			(* sinon *)
 
 			(* A : valeur tampon *)
-			Zero(getStateRegister state)::
+			Zero(getStateRegisterPlus state 0)::
 
-			Label(getStateLabel state)::
-			Inc(getStateRegister state)::
+			Label(getStateLabelPlus state 0)::
+			Inc(getStateRegisterPlus state 0)::
 
-			EqPredicate(getStateRegister state, ri1, label)::
-			EqPredicate(getStateRegister state, ri2, getStateLabel (setNewStateLabel state))::
+			EqPredicate(getStateRegisterPlus state 0, ri1, label):: (*inverse chelou*)
+			EqPredicate(getStateRegisterPlus state 0, ri2, getStateLabelPlus state 1):: (*inverse chelou*)
 
-			Goto(getStateLabel state)::
+			Goto(getStateLabelPlus state 0)::
 
-			Label(getStateLabel (setNewStateLabel state))::
-			aux is'
-		|i::is' -> i::aux is'
-	in (aux is, setNewStateRegister (setNewStateLabel (setNewStateLabel state)))
+			Label(getStateLabelPlus state 1)::[])) (setNewStateRegisterPlus (setNewStateLabelPlus state 2) 1)
+		|i::is' -> aux is' (finalIs@[i]) state
+	in aux is [] state
 ;;
 
 (* OK *)
@@ -303,15 +336,16 @@ let compile_stage2 (is, state) = gtpredicate_out( sub_out( add_out((is,state)) )
 
 (* OK *)
 let goto_out (is, state) =
-	let rec aux is =
+	let rec aux is finalIs state =
 		match is with
-		|[] -> []
+		|[] -> (finalIs, state)
 		|Goto(label)::is' ->
-			Zero(getStateRegister state)::
-			EqPredicate(getStateRegister state, getStateRegister state, label)::
-			aux is'
-		|i::is' -> i::aux is'
-	in (aux is, setNewStateRegister state)
+			aux is' (finalIs@(
+			Zero(getStateRegisterPlus state 0)::
+			EqPredicate(getStateRegisterPlus state 0, getStateRegisterPlus state 0, label)::[]
+			)) (setNewStateRegisterPlus state 1)
+		|i::is' -> aux is' (finalIs@[i]) state
+	in aux is [] state
 ;;
 
 (* OK *)
@@ -362,4 +396,8 @@ let compile_stage4 (is, state) =
 
 (*let urm_from_eurm eurmcmdList = compile_stage4 (compile_stage3 (compile_stage2 (compile_stage1 (eurmcmdList, State("0", 0)) ) ) );;*)
 let urm_from_eurm eurmcmdList = compile_stage4 (compile_stage3 (compile_stage2 (compile_stage1 ( compile_preprocess(eurmcmdList) ) ) ) );;
+
+
+
+
 
