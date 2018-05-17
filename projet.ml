@@ -16,11 +16,17 @@
 #use "types.ml";;
 #use "partie1_urm.ml";;
 #use "partie2_eurm.ml";;
+#use "lecture.ml";;
 #load "str.cma";;
 
 (** Tests Rendu 1 **)
 
-(*let m = urm_mk add_program [Reg (1, 2); Reg (2, 3)];;
+(*
+let fichier =  open_in "test.txt";;
+
+let add_program = program_of_string (string_of_file fichier);;
+
+let m = urm_mk add_program [Reg (1, 2); Reg (2, 3)];;
 
 urm_run m;;
 
@@ -107,9 +113,3 @@ let prog = urm_from_eurm eurm_factorial;;
 let m = urm_mk prog [Reg (1,5)];;
 
 urm_run m;;
-
-
-
-
-
-
