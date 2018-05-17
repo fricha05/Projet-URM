@@ -22,7 +22,7 @@
 (** Tests Rendu 1 **)
 
 (*
-let fichier =  open_in "test.txt";;
+let fichier =  open_in "test_urm.txt";;
 
 let add_program = program_of_string (string_of_file fichier);;
 
@@ -103,10 +103,14 @@ urm_run_trace m;;*)
 (*let eurm_factorial = [Zero 3; Inc 3; Dec 3; Dec 1; Quit]*)
 
 
-let eurm_factorial = [Comment "Compute r1! and place the result in r1"; ZeroPredicate (1, "r1=0");
+(* let eurm_factorial = [Comment "Compute r1! and place the result in r1"; ZeroPredicate (1, "r1=0");
 Goto "r1>0"; Comment "r1 holds 0"; Label "r1=0"; Inc 1; Goto "done"; Comment "r1 holds a positive integer";
 Label "r1>0"; Copy (2, 1); Zero 1; Inc 1; Zero 3; Inc 3; Comment "main loop"; Label "loop"; Mult (1, 3);
-EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]
+EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit] *)
+
+let fichier =  open_in "test_eurm.txt";;
+
+let eurm_factorial = program_of_lex_eurm(lines_from_file ("test_eurm.txt"));;
 
 let prog = urm_from_eurm eurm_factorial;;
 
