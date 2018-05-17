@@ -16,7 +16,7 @@
 #use "types.ml";;
 #use "partie1_urm.ml";;
 #use "partie2_eurm.ml";;
-(*#load "str.cma";;*)
+#load "str.cma";;
 
 (** Tests Rendu 1 **)
 

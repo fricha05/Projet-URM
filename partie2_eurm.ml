@@ -12,11 +12,8 @@
 
 labels commencent à 1
 State("1",1) label en string en premier, state montrent le premier index de registre dispo à utiliser et pareil pour le label
-*)
-
-
 (* fst : premier élément d'un tuple, snd : second élément d'un tuple *)
-(* OK *)
+*)
 
 let rec print_list = function 
 [] -> (Printf.printf ("\n\n"))
@@ -26,9 +23,9 @@ let rec label_to_line label listeLabels =
 	if listeLabels = []
 		then failwith "Erreur label_to_line"
 	else if fst (List.hd listeLabels) = label
-		then (Printf.printf "Label trouve !! \n\n " ; snd (List.hd listeLabels))
+		then snd (List.hd listeLabels)
 	else
-		(Printf.printf "Label %s (à trouver %s) - " (fst (List.hd listeLabels)) label ; label_to_line label (List.tl listeLabels))
+		label_to_line label (List.tl listeLabels)
 
 let rec compile_comment_out is =
     match is with
@@ -40,7 +37,7 @@ let rec compile_comment_out is =
 let rec compile_label_out is  =
 	let rec aux is isFinal acc listeLabels =
 		match is with 
-		|[] -> (Printf.printf "Lecture de la Liste des Labels en compile label out : "; print_list listeLabels ;auxBis isFinal listeLabels)
+		|[] -> auxBis isFinal listeLabels
 		|Label l::is' -> aux is' (isFinal@[Label (string_of_int acc)]) (acc+1) ((l,acc)::listeLabels)
 		|i::is' -> aux is' (isFinal@[i]) acc listeLabels
 	and auxBis isBis listeLabels =
@@ -60,7 +57,7 @@ let rec compile_label_out is  =
 let rec create_state_label is =
 	let rec aux is acc =
 		match is with
-		|[] -> (Printf.printf "Prochain label disponible %i \n" acc; string_of_int acc)
+		|[] -> string_of_int acc
 		|Label s::is' -> aux is' (acc+1)
 		|i::is' -> (aux is' acc)
 	in aux is 1;
@@ -72,7 +69,7 @@ let max_ter a b c = max (max a b) c ;;
 let rec create_state_reg is =
 	let rec aux is regidmax =
 		match is with
-		|[] -> (Printf.printf "RegMax : %d \n\n" regidmax; (regidmax+1))
+		|[] -> (regidmax+1)
 		|Add(r1,r2)::is' -> aux is' (max_ter r1 r2 regidmax)
 		|Copy(r1,r2)::is' -> aux is' (max_ter r1 r2 regidmax)
 		|Dec(r1)::is' -> aux is' (max r1 regidmax)
@@ -353,7 +350,7 @@ création d'une liste de tuples d'index et de la ligne suivante correspondante
 let compile_stage4 (is, state) =
 	let rec suppression_liste is isFinal listeLabels acc =
 		match is with
-		|[] -> (Printf.printf "Lecture de la Liste des Labels en stage 4 : "; print_list listeLabels ;aux isFinal listeLabels)
+		|[] -> aux isFinal listeLabels
 		|Label l::is' -> suppression_liste is' isFinal ((l, acc)::listeLabels) acc
 		|q::is' -> suppression_liste is' (isFinal@[q]) listeLabels (acc+1)
 	and aux is listeLabels =
@@ -361,7 +358,7 @@ let compile_stage4 (is, state) =
 		|[] -> []
 		|Inc r1::is' -> URMSucc(r1)::aux is' listeLabels
 		|Zero r1::is' -> URMZero(r1)::aux is' listeLabels
-		|EqPredicate(r1,r2,label)::is' -> (print_list listeLabels; Printf.printf "Label à trouver %s - " label ; URMJump(r1, r2, (label_to_line label listeLabels))::aux is' listeLabels)
+		|EqPredicate(r1,r2,label)::is' -> URMJump(r1, r2, (label_to_line label listeLabels))::aux is' listeLabels
 		|Copy(r1,r2)::is' -> URMCopy(r1,r2)::aux is' listeLabels
 		|_::is' -> aux is' listeLabels
 	in suppression_liste is [] [] 0
