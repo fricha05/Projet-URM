@@ -38,7 +38,7 @@ let rec compile_comment_out is =
 let rec compile_label_out is  =
 	let rec aux is isFinal acc listeLabels =
 		match is with (* is: instructions *)
-		|[] -> auxBis isFinal listeLabels (*, State("0",acc)*)
+		|[] -> (Printf.printf "Lecture de la Liste des Labels en compile label out : "; print_list listeLabels ;auxBis isFinal listeLabels) (*, State("0",acc)*)
 		|Label l::is' -> aux is' (isFinal@[Label (string_of_int acc)]) (acc+1) ((l,acc)::listeLabels) (* "Label " ^ - (Printf.printf "Nouveau label : %i - " acc ;  *)
 		|i::is' -> aux is' (isFinal@[i]) acc listeLabels
 	and auxBis isBis listeLabels =
@@ -167,19 +167,32 @@ let mult_out (is, state) =
 	    |Mult(ri1,ri2)::is' ->
 	    	aux is' (finalIs@(
 
+	    	(*Cas multiplication 0 et 1*)
+	    	ZeroPredicate(ri2, getStateLabelPlus state 2)::
+	    	Zero(getStateRegisterPlus state 2)::
+	    	Inc(getStateRegisterPlus state 2)::
+	    	EqPredicate(ri2, getStateRegisterPlus state 2, getStateLabelPlus state 3)::
+
 	    	(*Sauvegarde valeur ri1*)
-	    	Zero(getStateRegisterPlus state 1)::
-	    	Label(getStateLabelPlus state 1)::
-	    	Inc(getStateRegisterPlus state 1)::
-	    	LTPredicate(ri1, getStateRegisterPlus state 1, getStateLabelPlus state 1):: (*inverse chelou*)
-
 	    	Zero(getStateRegisterPlus state 0)::
-			Label(getStateLabelPlus state 0)::
-			Add(ri1, getStateRegisterPlus state 1)::
-			Inc(getStateRegisterPlus state 0)::
-			LTPredicate(getStateRegisterPlus state 0, ri2,  getStateLabelPlus state 0):: (* si valeurs différentes, boucler *)
+	    	Label(getStateLabelPlus state 0)::
+	    	Inc(getStateRegisterPlus state 0)::
+	    	LTPredicate(ri1, getStateRegisterPlus state 0, getStateLabelPlus state 0):: (*inverse chelou*)
 
-			[])) (setNewStateLabelPlus (setNewStateRegisterPlus state 2) 2)
+	    	Zero(getStateRegisterPlus state 1)::
+	    	Inc(getStateRegisterPlus state 1)::
+			Label(getStateLabelPlus state 1)::
+			Add(ri1, getStateRegisterPlus state 0)::
+			Inc(getStateRegisterPlus state 1)::
+			EqPredicate(getStateRegisterPlus state 1, ri2,  getStateLabelPlus state 3):: (* si valeurs différentes, boucler *)
+			Goto(getStateLabelPlus state 1)::
+
+			Label(getStateLabelPlus state 2)::
+			Zero(ri1)::
+
+			Label(getStateLabelPlus state 3)::
+
+			[])) (setNewStateLabelPlus (setNewStateRegisterPlus state 3) 4)
 	    |i::is' -> aux is' (finalIs@[i]) state
 	in aux is [] state
 ;;
@@ -342,8 +355,8 @@ let goto_out (is, state) =
 		|Goto(label)::is' ->
 			aux is' (finalIs@(
 			Zero(getStateRegisterPlus state 0)::
-			EqPredicate(getStateRegisterPlus state 0, getStateRegisterPlus state 0, label)::[]
-			)) (setNewStateRegisterPlus state 1)
+			EqPredicate(getStateRegisterPlus state 0, getStateRegisterPlus state 0, label)::
+			[])) (setNewStateRegisterPlus state 1)
 		|i::is' -> aux is' (finalIs@[i]) state
 	in aux is [] state
 ;;
@@ -377,7 +390,7 @@ let rec print_list = function
 let compile_stage4 (is, state) =
 	let rec suppression_liste is isFinal listeLabels acc =
 		match is with
-		|[] -> aux isFinal listeLabels
+		|[] -> (Printf.printf "Lecture de la Liste des Labels en stage 4 : "; print_list listeLabels ;aux isFinal listeLabels)
 		|Label l::is' -> suppression_liste is' isFinal ((l, acc)::listeLabels) acc
 		|q::is' -> suppression_liste is' (isFinal@[q]) listeLabels (acc+1)
 	and aux is listeLabels =

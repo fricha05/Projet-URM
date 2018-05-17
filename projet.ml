@@ -35,6 +35,56 @@ Label "r1>0"; Copy (2, 1); Zero 1; Inc 1; Zero 3; Inc 3; Comment "main loop"; La
 EqPredicate (2, 3, "done"); Inc 3; Goto "loop"; Label "done"; Quit]
 
 
+(*let eurm_factorial = 
+[(*Comment "Compute r1! and place the result in r1"; *)
+ZeroPredicate (1, "r1=0");
+Goto "r1>0"; 
+(*Comment "r1 holds 0"; *)
+Label "r1=0"; 
+Inc 1; 
+Goto "done"; 
+(*Comment "r1 holds a positive integer";*)
+Label "r1>0"; 
+Copy (2, 1); 
+Zero 1; 
+Inc 1; 
+Zero 3; 
+Inc 3; 
+(*Comment "main loop"; *)
+Label "loop"; 
+Mult (1, 3);
+EqPredicate (2, 3, "done"); 
+Inc 3; 
+Goto "loop"; 
+Label "done"; 
+Quit]*)
+
+(*let eurm_factorial = 
+[(*Comment "Compute r1! and place the result in r1"; *)
+ZeroPredicate (1, "r1=0"); (*marche *)
+Goto "r1>0"; (*marche *)
+(*Comment "r1 holds 0"; *)
+Label "r1=0"; 
+Inc 1; 
+Goto "done"; 
+(*Comment "r1 holds a positive integer";*) 
+Label "r1>0";
+Copy (2, 1); (*marche *)
+Zero 1; (*marche *)
+Inc 1; (*marche *)
+Zero 3; (*marche *)
+Inc 3; (*marche *)
+(*Comment "main loop"; *)
+Label "loop"; 
+Mult (1, 3);
+EqPredicate (2, 3, "done"); 
+Inc 3; 
+Goto "loop";  
+Label "done"; 
+Quit]*)
+
+(*let urm_from_eurm eurmcmdList = compile_stage4 (compile_stage3 (compile_stage2 (compile_stage1 (eurmcmdList, State("0", 0)) ) ) )*)
+
 (**** 1er TESTS - ne pas toucher let m = urm_mk prog [Reg (1,5)];; 
 
 
@@ -104,22 +154,21 @@ dec_out OK
 (*let eurm_factorial = [Zero 3; LTPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit] *)
 
 (*let eurm_factorial = [Zero 3; LEqPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit]*)
-
 (*let eurm_factorial = [Zero 3; Inc 3; Inc 3; Inc 3; Inc 3; Inc 3; LEqPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit]*)
 
 (*let eurm_factorial = [Zero 3; ZeroPredicate(3,"Test"); Inc(1); Label "Test"; Quit]*)
-
 (*let eurm_factorial = [Zero 3; Inc 3; ZeroPredicate(3,"Test"); Inc(1); Label "Test"; Quit]*)
 
 (*let eurm_factorial = [Zero 3; Inc 1; Quit]*)
 
 (*let eurm_factorial = [Zero 3; GEqPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit] *)
-
+(*let eurm_factorial = [Zero 3; GEqPredicate(1,3,"Test"); Inc(1); Label "Test"; Quit] *)
 (*let eurm_factorial = [Zero 3; Inc 3; Inc 3; Inc 3; Inc 3; Inc 3; GEqPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit]*)
-
 (*let eurm_factorial = [Zero 3; Inc 3; Inc 3; Inc 3; Inc 3; Inc 3; Inc 3; GEqPredicate(3,1,"Test"); Inc(1); Label "Test"; Quit]*)
 
 (*let eurm_factorial = [Zero 3; Inc 3; Inc 3; Mult(1,3); Quit] *)
+
+(*let eurm_factorial = [Zero 3; Inc 3; Inc 3; Inc 3; Inc 3; Mult(1,3); Quit]*)
 
 (*let eurm_factorial = [Zero 3; Inc 3; Dec 3; Dec 1; Quit]*)
 
