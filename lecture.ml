@@ -1,3 +1,21 @@
+
+
+
+
+(*
+
+    Projet - Machine a registres non limites
+    Etudiants - Florian RICHARD et Oscar FALMER
+    Fichier - Lecture.ml
+
+*)
+
+
+
+
+
+#load "str.cma" 
+
 exception Syntax_error
 
 (* ---- URM ---- *)
@@ -9,6 +27,10 @@ let rec string_of_file f =
         with
             | End_of_file -> ""
 
+let program_of_string str =
+    let lex = Str.split (Str.regexp "[ \t\n(),]+") str in
+        List.iter (fun s -> print_string s; print_newline ()) lex;
+        program_of_lex lex
 
 let rec program_of_lex lex =
     match lex with
@@ -25,11 +47,6 @@ let rec program_of_lex lex =
         (int_of_string arg_3)))
         :: (program_of_lex tail)
     |_ -> raise Syntax_error
-
-let program_of_string str =
-    let lex = Str.split (Str.regexp "[ \t\n(),]+") str in
-        List.iter (fun s -> print_string s; print_newline ()) lex;
-        program_of_lex lex
 
 (*---- EURM ----*)
 
@@ -87,8 +104,25 @@ let rec program_of_lex_eurm lex =
         (Quit :: (program_of_lex_eurm tail))
     |_ -> raise Syntax_error
 
+(*Ne marche pas*)
+(*let program_of_string_eurm strLstLst =
+    let lexBis str =
+        let lex = Str.split (Str.regexp "[ \n\t(),]+") str in
+        List.iter (fun s -> print_string s; print_newline ()) lex;
+        program_of_lex_eurm lex
+    in let rec auxTer strLst =
+        match strLst with
+        |[] -> []
+        |l::lst -> (lexBis l)@(auxTer lst)
+    in let rec auxBis strLstLst =
+        match strLstLst with
+        |[] -> []
+        |l::lst -> (auxTer l)@(auxBis lst)
+    in auxBis strLstLst
+;;*)
+
 let rec string_of_file_eurm f =
-   try
+    try
         let str = input_line f in
             str::(string_of_file_eurm f)
         with
@@ -96,8 +130,8 @@ let rec string_of_file_eurm f =
 ;;
 
 let lines_from_file file =
-   let aux l = List.map (fun s -> Str.split (Str.regexp "[ ]+") s) l
-in aux (string_of_file_eurm (open_in file))
+    let aux l = List.map (fun s -> Str.split (Str.regexp "[ ]+") s) l
+    in aux (string_of_file_eurm (open_in file))
 ;;
 
 (* let program_of_string_eurm str =
